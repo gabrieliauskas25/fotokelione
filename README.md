@@ -30,3 +30,26 @@ Telefone naviguojama apatine juosta, planšetėje – `NavigationRail`; tinkleli
 ```
 
 Arba atidarykite projektą Android Studio ir paleiskite `app` konfigūraciją.
+
+---
+
+# GIS darbas: pradinis darbas su žemėlapiais
+
+Aplanke [`gis/`](gis/) yra ArcGIS Maps SDK for JavaScript (4.33) aplikacija su **lietuviškais duomenimis**:
+Lietuvos apskritys (Esri Living Atlas), 57 miestai, 17 lankytinų vietų ir adresų paieška Lietuvoje.
+
+| Puslapis | Turinys |
+| --- | --- |
+| `gis/index.html` | Turinys ir užduočių atitikmenų lentelė |
+| `gis/map2d.html` | 1 (2D), 2, 3, 4 (2D vėliava), 5, 6 (buferis, maršrutas), 7 (4 vizualizacijos), 8 (užklausa) |
+| `gis/scene3d.html` | 1 (3D), 2, 3, 4 (3D Gedimino bokštas), 5 (3D paieška), 9 (realistinė aplinka), 10 (kamera) |
+
+Paleidimas:
+
+```bash
+cd gis
+python3 -m http.server 8000   # atidarykite http://localhost:8000
+```
+
+Maršrutas pagal nutylėjimą skaičiuojamas OSRM servisu. Įrašius ArcGIS API raktą į `gis/js/config.js`,
+naudojamas Esri Route servisas.

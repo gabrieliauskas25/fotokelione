@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lietuvos GIS darbas</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body { overflow-y: auto; }
+    .turinys { max-width: 860px; margin: 0 auto; padding: 24px 16px 40px; }
+    .juosta { height: 10px; background: linear-gradient(var(--lt-geltona) 0 33%, var(--lt-zalia) 33% 66%, var(--lt-raudona) 66%); border-radius: 3px; }
+    h1 { margin: 16px 0 4px; }
+    .kortos { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin: 20px 0; }
+    .korta { display: block; padding: 16px; border: 1px solid var(--riba); border-radius: 6px; text-decoration: none; color: inherit; }
+    .korta:hover { border-color: var(--akcentas); }
+    .korta b { color: var(--akcentas); font-size: 18px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--riba); vertical-align: top; }
+    th { color: var(--antrinis); font-weight: 600; }
+    .lent { overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <div class="turinys">
+    <div class="juosta"></div>
+    <h1>Pradinis darbas su žemėlapiais</h1>
+    <p class="pastaba">ArcGIS Maps SDK for JavaScript 4.33 · visi duomenys – lietuviški · Gabrielius Vaišvila, MKDf-23/2</p>
+
+    <div class="kortos">
+      <a class="korta" href="map2d.html"><b>2D žemėlapis →</b><br>MapView: sluoksniai, valdikliai, vėliavos grafika, paieška, buferis, maršrutas, vizualizacija, užklausos.</a>
+      <a class="korta" href="scene3d.html"><b>3D scena →</b><br>SceneView: 3D sluoksniai, Gedimino bokšto modelis, 3D paieška, realistinė aplinka, kameros valdymas.</a>
+    </div>
+
+    <div class="lent">
+    <table>
+      <tr><th>Nr.</th><th>Užduotis</th><th>Kur realizuota</th></tr>
+      <tr><td>1</td><td>Žemėlapio įkėlimas 2D ir 3D</td><td>MapView (<i>topo-vector</i>) ir SceneView (<i>satellite</i> + <i>world-elevation</i> reljefas)</td></tr>
+      <tr><td>2</td><td>Sluoksniai ir PopupTemplate</td><td>Lietuvos apskritys (Esri Living Atlas FeatureLayer), miestai ir lankytinos vietos (klientiniai FeatureLayer), OSM 3D pastatai (SceneLayer). Iššokantys langai su laukais ir Arcade išraiškomis (plotas km², dalis nuo LT gyventojų).</td></tr>
+      <tr><td>3</td><td>Valdikliai (≥ 5)</td><td>2D: Search, Zoom, Home, Compass, Locate, Fullscreen, ScaleBar, BasemapToggle, BasemapGallery, LayerList, Legend (Expand). 3D: Search, Zoom, NavigationToggle, Compass, Home, Fullscreen, BasemapToggle, LayerList, Legend, Daylight, Weather.</td></tr>
+      <tr><td>4</td><td>Savo grafikos objektas iš 5+ elementų</td><td>2D: Lietuvos vėliava Europos centre (stiebas, 3 juostos, pagrindas, užrašas). 3D: Gedimino bokšto modelis (kalnas, bokštas, viršutinis aukštas, stiebas, 3 vėliavos juostos, užrašas).</td></tr>
+      <tr><td>5</td><td>Paieška keliuose šaltiniuose</td><td>Miestai, lankytinos vietos, apskritys ir ArcGIS World Geocoder (tik Lietuva, <code>countryCode: LTU</code>); 3D – su pasvirusios kameros perskridimu.</td></tr>
+      <tr><td>6</td><td>Analizė</td><td>Geodezinis buferis (<code>geodesicBufferOperator</code>) + miestų buferyje paieška; maršrutas per 2–3 miestus (Esri Route su API raktu arba OSRM).</td></tr>
+      <tr><td>7</td><td>Vizualizacija</td><td>Pagal tipą (unique values), klasių intervalai, tolydus dydis, tolydi spalva; 3D – cilindrų aukštis pagal gyventojus.</td></tr>
+      <tr><td>8</td><td>Duomenų užklausa</td><td>SQL <code>where</code> pagal apskritį, tipą ir gyventojus, rūšiavimas, gyventojų sumos statistika, paryškinimas.</td></tr>
+      <tr><td>9</td><td>Realistinė aplinka</td><td>Saulės padėtis pagal datą ir Lietuvos laiką, šešėliai, žvaigždės, atmosfera, orai (saulėta, debesuota, lietus, sniegas, rūkas).</td></tr>
+      <tr><td>10</td><td>Kameros valdymas</td><td>Greitos vietos (Vilnius, Trakai, Kaunas, Kuršių nerija…), sukimas, pokrypis, priartinimas, vaizdas iš viršaus, apskridimas ratu, kameros parametrų rodymas.</td></tr>
+    </table>
+    </div>
+
+    <p class="pastaba" style="margin-top:16px">Gyventojų skaičiai apytiksliai (suapvalinti, 2024 m. pradžia, Valstybės duomenų agentūra).
+      Paleidimas: <code>python3 -m http.server</code> šiame aplanke ir atidarykite <code>http://localhost:8000</code>.</p>
+  </div>
+</body>
+</html>

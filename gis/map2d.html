@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lietuva 2D – GIS darbas</title>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.33/esri/themes/light/main.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="panel">
+      <header>
+        <h1>Lietuva 2D žemėlapyje</h1>
+        <p>MapView · <a href="scene3d.html">3D scena</a> · <a href="index.html">Turinys</a></p>
+      </header>
+
+      <details open>
+        <summary><span class="nr">1–3</span> Žemėlapis, sluoksniai, valdikliai</summary>
+        <div class="sekcija">
+          <p class="pastaba">2D žemėlapis (MapView) su trimis sluoksniais: Lietuvos apskritys (Esri Living Atlas),
+            miestai ir lankytinos vietos. Spustelėkite objektą – atsivers iššokantis langas (PopupTemplate).</p>
+          <p class="pastaba">Valdikliai: paieška, mastelis, pradinė padėtis, kompasas, buvimo vieta,
+            pagrindo perjungimas, pagrindų galerija, sluoksnių sąrašas, legenda, mastelio juosta, viso ekrano režimas.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary><span class="nr">4</span> Grafika – Lietuvos vėliava</summary>
+        <div class="sekcija">
+          <p class="pastaba">Savo grafikos objektas iš 6 elementų: stiebas (linija), trys vėliavos juostos
+            (poligonai), pagrindas Europos centre (taškas) ir užrašas (tekstas).</p>
+          <div class="mygtukai">
+            <button id="velRodyti">Rodyti vėliavą</button>
+            <button id="velSlepti" class="antrinis">Slėpti</button>
+          </div>
+        </div>
+      </details>
+
+      <details>
+        <summary><span class="nr">5</span> Paieška</summary>
+        <div class="sekcija">
+          <p class="pastaba">Paieškos laukelis žemėlapio viršuje ieško keliuose šaltiniuose: miestai, lankytinos
+            vietos, apskritys ir adresai Lietuvoje (ArcGIS World Geocoder, <code>countryCode: LTU</code>).</p>
+        </div>
+      </details>
+
+      <details>
+        <summary><span class="nr">6</span> Analizė – buferis ir maršrutas</summary>
+        <div class="sekcija">
+          <label for="buferisKm">Geodezinio buferio spindulys, km</label>
+          <input id="buferisKm" type="number" min="1" max="300" value="30">
+          <div class="mygtukai" style="margin-top:8px">
+            <button id="buferisBtn">Spustelėti žemėlapyje</button>
+            <button id="buferisValyti" class="antrinis">Valyti</button>
+          </div>
+          <div id="buferisRez" class="rezultatas"></div>
+
+          <hr style="border:0;border-top:1px solid var(--riba);margin:14px 0 4px">
+          <label for="mIs">Maršrutas iš</label>
+          <select id="mIs"></select>
+          <label for="mPer">Per (nebūtina)</label>
+          <select id="mPer"></select>
+          <label for="mI">Į</label>
+          <select id="mI"></select>
+          <div class="mygtukai" style="margin-top:8px">
+            <button id="marsrutasBtn">Skaičiuoti maršrutą</button>
+            <button id="marsrutasValyti" class="antrinis">Valyti</button>
+          </div>
+          <div id="marsrutasRez" class="rezultatas"></div>
+        </div>
+      </details>
+
+      <details>
+        <summary><span class="nr">7</span> Vizualizacija</summary>
+        <div class="sekcija">
+          <label for="vizRezimas">Miestų atvaizdavimas</label>
+          <select id="vizRezimas">
+            <option value="tipas">Pagal tipą (unikalios reikšmės)</option>
+            <option value="klases">Klasių intervalai – gyventojai</option>
+            <option value="dydis">Tolydus dydis – gyventojai</option>
+            <option value="spalva">Tolydi spalva – atstumas iki Vilniaus</option>
+          </select>
+          <p id="vizAprasas" class="pastaba"></p>
+        </div>
+      </details>
+
+      <details>
+        <summary><span class="nr">8</span> Duomenų užklausa</summary>
+        <div class="sekcija">
+          <label for="qApskritis">Apskritis</label>
+          <select id="qApskritis"><option value="">Visos</option></select>
+          <label for="qTipas">Tipas</label>
+          <select id="qTipas">
+            <option value="">Visi</option>
+            <option>Didmiestis</option>
+            <option>Apskrities centras</option>
+            <option>Kurortas</option>
+            <option>Miestas</option>
+          </select>
+          <label for="qMin">Gyventojų ne mažiau kaip</label>
+          <input id="qMin" type="number" min="0" step="1000" value="10000">
+          <div class="mygtukai" style="margin-top:8px">
+            <button id="qVykdyti">Vykdyti užklausą</button>
+            <button id="qValyti" class="antrinis">Valyti</button>
+          </div>
+          <div id="qRez" class="rezultatas"></div>
+        </div>
+      </details>
+    </aside>
+
+    <main class="view">
+      <div id="viewDiv" style="height:100%"></div>
+      <div id="busena" class="busena"></div>
+    </main>
+  </div>
+
+  <script src="data/lietuva.js"></script>
+  <script src="js/config.js"></script>
+  <script src="https://js.arcgis.com/4.33/"></script>
+  <script src="js/map2d.js"></script>
+</body>
+</html>

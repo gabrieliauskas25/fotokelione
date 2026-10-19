@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lietuva 3D – GIS darbas</title>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.33/esri/themes/light/main.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="panel">
+      <header>
+        <h1>Lietuva 3D scenoje</h1>
+        <p>SceneView · <a href="map2d.html">2D žemėlapis</a> · <a href="index.html">Turinys</a></p>
+      </header>
+
+      <details open>
+        <summary><span class="nr">1–3</span> Scena, sluoksniai, valdikliai</summary>
+        <div class="sekcija">
+          <p class="pastaba">3D scena (SceneView) su reljefu (world-elevation). Sluoksniai: apskritys, miestai
+            (3D cilindrai pagal gyventojų skaičių), lankytinos vietos ir OpenStreetMap 3D pastatai.</p>
+          <p class="pastaba">Valdikliai: paieška, mastelis, navigacijos režimas, kompasas, pradinė padėtis,
+            pagrindo perjungimas, sluoksnių sąrašas, legenda, dienos šviesa, orai, viso ekrano režimas.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary><span class="nr">4</span> 3D grafika – Gedimino bokštas</summary>
+        <div class="sekcija">
+          <p class="pastaba">Savo 3D objektas iš 7 elementų: kalnas (kūgis), bokštas (cilindras), viršutinis
+            aukštas (cilindras), vėliavos stiebas (cilindras), trys vėliavos juostos (kubai) ir užrašas
+            (LabelSymbol3D su nuoroda). Modelis padidintas ~5 kartus ir pastatytas Vingio parke.</p>
+          <div class="mygtukai">
+            <button id="bokstasEiti">Rodyti bokštą</button>
+          </div>
+        </div>
+      </details>
+
+      <details>
+        <summary><span class="nr">5</span> Paieška</summary>
+        <div class="sekcija">
+          <p class="pastaba">3D paieška keliuose šaltiniuose: miestai, lankytinos vietos, apskritys ir adresai
+            Lietuvoje. Radus objektą kamera nuskrenda pasvirusiu kampu.</p>
+        </div>
+      </details>
+
+      <details open>
+        <summary><span class="nr">9</span> Realistinė aplinka</summary>
+        <div class="sekcija">
+          <label for="data">Data</label>
+          <input id="data" type="date" value="2026-06-21">
+          <label for="laikas">Laikas: <b id="laikasTxt">18:00</b> (Lietuvos laikas)</label>
+          <input id="laikas" type="range" min="0" max="1439" step="5" value="1080">
+          <label for="apsvietimas">Apšvietimas</label>
+          <select id="apsvietimas">
+            <option value="sun">Saulė (pagal datą ir laiką)</option>
+            <option value="virtual">Virtualus (visada šviesu)</option>
+          </select>
+          <label for="orai">Orai</label>
+          <select id="orai">
+            <option value="sunny">Saulėta</option>
+            <option value="cloudy">Debesuota</option>
+            <option value="rainy">Lietinga</option>
+            <option value="snowy">Snieguota</option>
+            <option value="foggy">Rūkas</option>
+          </select>
+          <div class="check"><input id="seseliai" type="checkbox" checked><label for="seseliai" style="margin:0">Šešėliai</label></div>
+          <div class="check"><input id="zvaigzdes" type="checkbox" checked><label for="zvaigzdes" style="margin:0">Žvaigždės</label></div>
+          <div class="check"><input id="atmosfera" type="checkbox" checked><label for="atmosfera" style="margin:0">Atmosfera</label></div>
+          <div class="mygtukai" style="margin-top:8px">
+            <button class="antrinis" data-laikas="330">Saulėtekis</button>
+            <button class="antrinis" data-laikas="780">Vidurdienis</button>
+            <button class="antrinis" data-laikas="1275">Saulėlydis</button>
+            <button class="antrinis" data-laikas="60">Naktis</button>
+          </div>
+        </div>
+      </details>
+
+      <details open>
+        <summary><span class="nr">10</span> Kameros valdymas</summary>
+        <div class="sekcija">
+          <label>Greitos vietos</label>
+          <div class="mygtukai" id="vietos"></div>
+          <label>Kamera</label>
+          <div class="mygtukai">
+            <button class="antrinis" data-kamera="kaire">⟲ Kairėn</button>
+            <button class="antrinis" data-kamera="desine">⟳ Dešinėn</button>
+            <button class="antrinis" data-kamera="aukstyn">▲ Pakelti</button>
+            <button class="antrinis" data-kamera="zemyn">▼ Nuleisti</button>
+            <button class="antrinis" data-kamera="arciau">＋ Arčiau</button>
+            <button class="antrinis" data-kamera="toliau">－ Toliau</button>
+            <button class="antrinis" data-kamera="virsus">Vaizdas iš viršaus</button>
+            <button class="antrinis" id="skrydis">Apskristi ratu</button>
+          </div>
+          <code class="sql" id="kameraInfo"></code>
+        </div>
+      </details>
+    </aside>
+
+    <main class="view">
+      <div id="viewDiv" style="height:100%"></div>
+    </main>
+  </div>
+
+  <script src="data/lietuva.js"></script>
+  <script src="js/config.js"></script>
+  <script src="https://js.arcgis.com/4.33/"></script>
+  <script src="js/scene3d.js"></script>
+</body>
+</html>
