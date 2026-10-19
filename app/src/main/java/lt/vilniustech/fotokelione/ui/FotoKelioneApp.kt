@@ -53,8 +53,8 @@ import lt.vilniustech.fotokelione.ui.screens.GearScreen
 import lt.vilniustech.fotokelione.ui.screens.PlanScreen
 
 const val AUTHOR_NAME = "Gabrielius"
-const val AUTHOR_SURNAME = "Pavardė"
-const val AUTHOR_GROUP = "MKDf-23/3"
+const val AUTHOR_SURNAME = "Vaišvila"
+const val AUTHOR_GROUP = "MKDf-23/2"
 const val AUTHOR_UNIVERSITY = "VILNIUS TECH"
 
 private enum class Destination(val route: String, val label: String, val icon: ImageVector) {

@@ -2,7 +2,7 @@
 
 Android programėlė, padedanti fotografams pasiruošti fotografavimo kelionei: vietų planavimas, įrangos pakavimas ir biudžeto skaičiavimas.
 
-Autorius: Gabrielius, grupė MKDf-23/3, VILNIUS TECH.
+Autorius: Gabrielius Vaišvila, grupė MKDf-23/2, VILNIUS TECH.
 
 ## Ekranai
 
