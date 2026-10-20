@@ -1,0 +1,1550 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lietuvos GIS – 2D ir 3D</title>
+  <!-- Vienas failas: ArcGIS Maps SDK for JavaScript 4.33, visi duomenys lietuviški.
+       Gabrielius Vaišvila, MKDf-23/2 -->
+  <link rel="stylesheet" href="https://js.arcgis.com/4.33/esri/themes/light/main.css">
+  <style>
+:root {
+  --lt-geltona: #fdb913;
+  --lt-zalia: #006a44;
+  --lt-raudona: #c1272d;
+  --fonas: #ffffff;
+  --tekstas: #1f2933;
+  --antrinis: #5f6b7a;
+  --riba: #d9dee4;
+  --akcentas: #006a44;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  color: var(--tekstas);
+  background: var(--fonas);
+}
+
+.app {
+  display: flex;
+  height: 100%;
+}
+
+.view {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+}
+
+.panel {
+  width: 340px;
+  overflow-y: auto;
+  border-right: 1px solid var(--riba);
+  background: #f7f9fa;
+  font-size: 14px;
+}
+
+.panel header {
+  padding: 12px 16px;
+  background: linear-gradient(var(--lt-geltona) 0 33%, var(--lt-zalia) 33% 66%, var(--lt-raudona) 66%);
+  background-size: 6px 100%;
+  background-repeat: no-repeat;
+  border-bottom: 1px solid var(--riba);
+}
+
+.panel header h1 {
+  margin: 0 0 2px 10px;
+  font-size: 17px;
+}
+
+.panel header p {
+  margin: 0 0 0 10px;
+  color: var(--antrinis);
+  font-size: 12px;
+}
+
+.panel header a { color: var(--akcentas); }
+
+details {
+  border-bottom: 1px solid var(--riba);
+}
+
+summary {
+  cursor: pointer;
+  padding: 10px 16px;
+  font-weight: 600;
+  user-select: none;
+}
+
+summary .nr {
+  display: inline-block;
+  min-width: 22px;
+  color: var(--akcentas);
+}
+
+.sekcija {
+  padding: 0 16px 14px;
+}
+
+.sekcija p.pastaba {
+  margin: 4px 0 8px;
+  color: var(--antrinis);
+  font-size: 12px;
+}
+
+label {
+  display: block;
+  margin: 8px 0 3px;
+  font-size: 12px;
+  color: var(--antrinis);
+}
+
+select, input[type="number"], input[type="text"], input[type="date"] {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--riba);
+  border-radius: 4px;
+  font: inherit;
+  background: white;
+}
+
+input[type="range"] { width: 100%; }
+
+.eilute {
+  display: flex;
+  gap: 8px;
+}
+
+.eilute > * { flex: 1; }
+
+button {
+  padding: 7px 10px;
+  margin-top: 8px;
+  border: 1px solid var(--akcentas);
+  border-radius: 4px;
+  background: var(--akcentas);
+  color: white;
+  font: inherit;
+  cursor: pointer;
+}
+
+button.antrinis {
+  background: white;
+  color: var(--akcentas);
+}
+
+button.aktyvus {
+  outline: 2px solid var(--lt-geltona);
+  outline-offset: 1px;
+}
+
+.mygtukai {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mygtukai button { margin-top: 0; }
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0;
+  font-size: 13px;
+  color: var(--tekstas);
+}
+
+.rezultatas {
+  margin-top: 10px;
+  font-size: 13px;
+}
+
+.rezultatas ol, .rezultatas ul {
+  margin: 6px 0 0;
+  padding-left: 20px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.rezultatas li {
+  cursor: pointer;
+  padding: 1px 0;
+}
+
+.rezultatas li:hover { color: var(--akcentas); text-decoration: underline; }
+
+code.sql {
+  display: block;
+  margin-top: 6px;
+  padding: 6px;
+  background: #eef1f3;
+  border-radius: 4px;
+  font-size: 11px;
+  word-break: break-word;
+}
+
+.busena {
+  position: absolute;
+  left: 50%;
+  bottom: 30px;
+  transform: translateX(-50%);
+  padding: 6px 12px;
+  border-radius: 4px;
+  background: rgba(31, 41, 51, 0.85);
+  color: white;
+  font-size: 13px;
+  pointer-events: none;
+  display: none;
+}
+
+.paieska {
+  position: absolute;
+  top: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+}
+
+@media (max-width: 760px) {
+  .app { flex-direction: column-reverse; }
+  .panel { width: 100%; height: 45%; border-right: 0; border-top: 1px solid var(--riba); }
+  .paieska { left: 60px; transform: none; }
+}
+
+.perjungiklis { display: flex; gap: 6px; margin: 8px 0 0 10px; }
+.perjungiklis button { margin-top: 0; flex: 1; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="panel">
+      <header>
+        <h1>Lietuvos GIS</h1>
+        <p>Pradinis darbas su žemėlapiais · lietuviški duomenys</p>
+        <div class="perjungiklis">
+          <button id="btn2d">2D žemėlapis</button>
+          <button id="btn3d" class="antrinis">3D scena</button>
+        </div>
+      </header>
+      <div data-rezimas="2d">
+
+      <details open>
+        <summary><span class="nr">1–3</span> Žemėlapis, sluoksniai, valdikliai</summary>
+        <div class="sekcija">
+          <p class="pastaba">2D žemėlapis (MapView) su trimis sluoksniais: Lietuvos apskritys (Esri Living Atlas),
+            miestai ir lankytinos vietos. Spustelėkite objektą – atsivers iššokantis langas (PopupTemplate).</p>
+          <p class="pastaba">Valdikliai: paieška, mastelis, pradinė padėtis, kompasas, buvimo vieta,
+            pagrindo perjungimas, pagrindų galerija, sluoksnių sąrašas, legenda, mastelio juosta, viso ekrano režimas.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary><span class="nr">4</span> Grafika – Lietuvos vėliava</summary>
+        <div class="sekcija">
+          <p class="pastaba">Savo grafikos objektas iš 6 elementų: stiebas (linija), trys vėliavos juostos
+            (poligonai), pagrindas Europos centre (taškas) ir užrašas (tekstas).</p>
+          <div class="mygtukai">
+            <button id="velRodyti">Rodyti vėliavą</button>
+            <button id="velSlepti" class="antrinis">Slėpti</button>
+          </div>
+        </div>
+      </details>
+
+      <details>
+        <summary><span class="nr">5</span> Paieška</summary>
+        <div class="sekcija">
+          <p class="pastaba">Paieškos laukelis žemėlapio viršuje ieško keliuose šaltiniuose: miestai, lankytinos
+            vietos, apskritys ir adresai Lietuvoje (ArcGIS World Geocoder, <code>countryCode: LTU</code>).</p>
+        </div>
+      </details>
+
+      <details>
+        <summary><span class="nr">6</span> Analizė – buferis ir maršrutas</summary>
+        <div class="sekcija">
+          <label for="buferisKm">Geodezinio buferio spindulys, km</label>
+          <input id="buferisKm" type="number" min="1" max="300" value="30">
+          <div class="mygtukai" style="margin-top:8px">
+            <button id="buferisBtn">Spustelėti žemėlapyje</button>
+            <button id="buferisValyti" class="antrinis">Valyti</button>
+          </div>
+          <div id="buferisRez" class="rezultatas"></div>
+
+          <hr style="border:0;border-top:1px solid var(--riba);margin:14px 0 4px">
+          <label for="mIs">Maršrutas iš</label>
+          <select id="mIs"></select>
+          <label for="mPer">Per (nebūtina)</label>
+          <select id="mPer"></select>
+          <label for="mI">Į</label>
+          <select id="mI"></select>
+          <div class="mygtukai" style="margin-top:8px">
+            <button id="marsrutasBtn">Skaičiuoti maršrutą</button>
+            <button id="marsrutasValyti" class="antrinis">Valyti</button>
+          </div>
+          <div id="marsrutasRez" class="rezultatas"></div>
+        </div>
+      </details>
+
+      <details>
+        <summary><span class="nr">7</span> Vizualizacija</summary>
+        <div class="sekcija">
+          <label for="vizRezimas">Miestų atvaizdavimas</label>
+          <select id="vizRezimas">
+            <option value="tipas">Pagal tipą (unikalios reikšmės)</option>
+            <option value="klases">Klasių intervalai – gyventojai</option>
+            <option value="dydis">Tolydus dydis – gyventojai</option>
+            <option value="spalva">Tolydi spalva – atstumas iki Vilniaus</option>
+          </select>
+          <p id="vizAprasas" class="pastaba"></p>
+        </div>
+      </details>
+
+      <details>
+        <summary><span class="nr">8</span> Duomenų užklausa</summary>
+        <div class="sekcija">
+          <label for="qApskritis">Apskritis</label>
+          <select id="qApskritis"><option value="">Visos</option></select>
+          <label for="qTipas">Tipas</label>
+          <select id="qTipas">
+            <option value="">Visi</option>
+            <option>Didmiestis</option>
+            <option>Apskrities centras</option>
+            <option>Kurortas</option>
+            <option>Miestas</option>
+          </select>
+          <label for="qMin">Gyventojų ne mažiau kaip</label>
+          <input id="qMin" type="number" min="0" step="1000" value="10000">
+          <div class="mygtukai" style="margin-top:8px">
+            <button id="qVykdyti">Vykdyti užklausą</button>
+            <button id="qValyti" class="antrinis">Valyti</button>
+          </div>
+          <div id="qRez" class="rezultatas"></div>
+        </div>
+      </details>
+      </div>
+      <div data-rezimas="3d" style="display:none">
+
+      <details open>
+        <summary><span class="nr">1–3</span> Scena, sluoksniai, valdikliai</summary>
+        <div class="sekcija">
+          <p class="pastaba">3D scena (SceneView) su reljefu (world-elevation). Sluoksniai: apskritys, miestai
+            (3D cilindrai pagal gyventojų skaičių), lankytinos vietos ir OpenStreetMap 3D pastatai.</p>
+          <p class="pastaba">Valdikliai: paieška, mastelis, navigacijos režimas, kompasas, pradinė padėtis,
+            pagrindo perjungimas, sluoksnių sąrašas, legenda, dienos šviesa, orai, viso ekrano režimas.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary><span class="nr">4</span> 3D grafika – Gedimino bokštas</summary>
+        <div class="sekcija">
+          <p class="pastaba">Savo 3D objektas iš 7 elementų: kalnas (kūgis), bokštas (cilindras), viršutinis
+            aukštas (cilindras), vėliavos stiebas (cilindras), trys vėliavos juostos (kubai) ir užrašas
+            (LabelSymbol3D su nuoroda). Modelis padidintas ~5 kartus ir pastatytas Vingio parke.</p>
+          <div class="mygtukai">
+            <button id="bokstasEiti">Rodyti bokštą</button>
+          </div>
+        </div>
+      </details>
+
+      <details>
+        <summary><span class="nr">5</span> Paieška</summary>
+        <div class="sekcija">
+          <p class="pastaba">3D paieška keliuose šaltiniuose: miestai, lankytinos vietos, apskritys ir adresai
+            Lietuvoje. Radus objektą kamera nuskrenda pasvirusiu kampu.</p>
+        </div>
+      </details>
+
+      <details open>
+        <summary><span class="nr">9</span> Realistinė aplinka</summary>
+        <div class="sekcija">
+          <label for="data">Data</label>
+          <input id="data" type="date" value="2026-06-21">
+          <label for="laikas">Laikas: <b id="laikasTxt">18:00</b> (Lietuvos laikas)</label>
+          <input id="laikas" type="range" min="0" max="1439" step="5" value="1080">
+          <label for="apsvietimas">Apšvietimas</label>
+          <select id="apsvietimas">
+            <option value="sun">Saulė (pagal datą ir laiką)</option>
+            <option value="virtual">Virtualus (visada šviesu)</option>
+          </select>
+          <label for="orai">Orai</label>
+          <select id="orai">
+            <option value="sunny">Saulėta</option>
+            <option value="cloudy">Debesuota</option>
+            <option value="rainy">Lietinga</option>
+            <option value="snowy">Snieguota</option>
+            <option value="foggy">Rūkas</option>
+          </select>
+          <div class="check"><input id="seseliai" type="checkbox" checked><label for="seseliai" style="margin:0">Šešėliai</label></div>
+          <div class="check"><input id="zvaigzdes" type="checkbox" checked><label for="zvaigzdes" style="margin:0">Žvaigždės</label></div>
+          <div class="check"><input id="atmosfera" type="checkbox" checked><label for="atmosfera" style="margin:0">Atmosfera</label></div>
+          <div class="mygtukai" style="margin-top:8px">
+            <button class="antrinis" data-laikas="330">Saulėtekis</button>
+            <button class="antrinis" data-laikas="780">Vidurdienis</button>
+            <button class="antrinis" data-laikas="1275">Saulėlydis</button>
+            <button class="antrinis" data-laikas="60">Naktis</button>
+          </div>
+        </div>
+      </details>
+
+      <details open>
+        <summary><span class="nr">10</span> Kameros valdymas</summary>
+        <div class="sekcija">
+          <label>Greitos vietos</label>
+          <div class="mygtukai" id="vietos"></div>
+          <label>Kamera</label>
+          <div class="mygtukai">
+            <button class="antrinis" data-kamera="kaire">⟲ Kairėn</button>
+            <button class="antrinis" data-kamera="desine">⟳ Dešinėn</button>
+            <button class="antrinis" data-kamera="aukstyn">▲ Pakelti</button>
+            <button class="antrinis" data-kamera="zemyn">▼ Nuleisti</button>
+            <button class="antrinis" data-kamera="arciau">＋ Arčiau</button>
+            <button class="antrinis" data-kamera="toliau">－ Toliau</button>
+            <button class="antrinis" data-kamera="virsus">Vaizdas iš viršaus</button>
+            <button class="antrinis" id="skrydis">Apskristi ratu</button>
+          </div>
+          <code class="sql" id="kameraInfo"></code>
+        </div>
+      </details>
+      </div>
+    </aside>
+
+    <main class="view">
+      <div id="viewDiv2d" data-rezimas="2d" style="height:100%"></div>
+      <div id="viewDiv3d" data-rezimas="3d" style="height:100%;display:none"></div>
+      <div id="busena" class="busena"></div>
+    </main>
+  </div>
+
+  <script>
+// Lietuviški duomenys, naudojami visuose GIS darbuose.
+// Gyventojų skaičiai – apytiksliai, suapvalinti (Valstybės duomenų agentūra / Statistikos
+// departamentas, 2024 m. pradžia). Koordinatės – WGS84 (ilguma, platuma).
+window.LT_DATA = {
+  // Atskaitos taškas atstumams skaičiuoti
+  sostine: { pavadinimas: "Vilnius", lon: 25.2797, lat: 54.6872 },
+
+  // Lietuvos miestai: [pavadinimas, apskritis, tipas, gyventojai, ilguma, platuma]
+  miestai: [
+    ["Vilnius", "Vilniaus", "Didmiestis", 592000, 25.2797, 54.6872],
+    ["Kaunas", "Kauno", "Didmiestis", 304000, 23.9036, 54.8985],
+    ["Klaipėda", "Klaipėdos", "Didmiestis", 158000, 21.1443, 55.7033],
+    ["Šiauliai", "Šiaulių", "Didmiestis", 107000, 23.3137, 55.9349],
+    ["Panevėžys", "Panevėžio", "Apskrities centras", 86000, 24.3575, 55.7348],
+    ["Alytus", "Alytaus", "Apskrities centras", 50000, 24.0459, 54.3963],
+    ["Marijampolė", "Marijampolės", "Apskrities centras", 35500, 23.3541, 54.5599],
+    ["Utena", "Utenos", "Apskrities centras", 25500, 25.5992, 55.4977],
+    ["Telšiai", "Telšių", "Apskrities centras", 22000, 22.2472, 55.9814],
+    ["Tauragė", "Tauragės", "Apskrities centras", 21500, 22.2897, 55.2522],
+    ["Mažeikiai", "Telšių", "Miestas", 33000, 22.3415, 56.3092],
+    ["Jonava", "Kauno", "Miestas", 26500, 24.2797, 55.0727],
+    ["Kėdainiai", "Kauno", "Miestas", 23000, 23.9748, 55.2883],
+    ["Ukmergė", "Vilniaus", "Miestas", 19500, 24.7761, 55.245],
+    ["Visaginas", "Utenos", "Miestas", 18000, 26.438, 55.5976],
+    ["Plungė", "Telšių", "Miestas", 17000, 21.8442, 55.9111],
+    ["Kretinga", "Klaipėdos", "Miestas", 17000, 21.2422, 55.8888],
+    ["Gargždai", "Klaipėdos", "Miestas", 16500, 21.3967, 55.7128],
+    ["Šilutė", "Klaipėdos", "Miestas", 15500, 21.4834, 55.3489],
+    ["Radviliškis", "Šiaulių", "Miestas", 15500, 23.5461, 55.8108],
+    ["Garliava", "Kauno", "Miestas", 12500, 23.8714, 54.8186],
+    ["Rokiškis", "Panevėžio", "Miestas", 12000, 25.5858, 55.9617],
+    ["Biržai", "Panevėžio", "Miestas", 11600, 24.756, 56.2004],
+    ["Elektrėnai", "Vilniaus", "Miestas", 10700, 24.6611, 54.7854],
+    ["Lentvaris", "Vilniaus", "Miestas", 10000, 25.0517, 54.6436],
+    ["Vilkaviškis", "Marijampolės", "Miestas", 9800, 23.0351, 54.6517],
+    ["Jurbarkas", "Tauragės", "Miestas", 9700, 22.7595, 55.0773],
+    ["Raseiniai", "Kauno", "Miestas", 9500, 23.1167, 55.3814],
+    ["Anykščiai", "Utenos", "Miestas", 8700, 25.1027, 55.526],
+    ["Joniškis", "Šiaulių", "Miestas", 8500, 23.615, 56.2378],
+    ["Prienai", "Kauno", "Miestas", 8500, 23.9417, 54.6333],
+    ["Kelmė", "Šiaulių", "Miestas", 8000, 22.9339, 55.6297],
+    ["Kaišiadorys", "Kauno", "Miestas", 7800, 24.45, 54.8667],
+    ["Varėna", "Alytaus", "Miestas", 7700, 24.5694, 54.2111],
+    ["Naujoji Akmenė", "Šiaulių", "Miestas", 7000, 22.8981, 56.3197],
+    ["Pasvalys", "Panevėžio", "Miestas", 6500, 24.4036, 56.0594],
+    ["Kupiškis", "Panevėžio", "Miestas", 6000, 24.98, 55.8403],
+    ["Zarasai", "Utenos", "Miestas", 6000, 26.2472, 55.7314],
+    ["Molėtai", "Utenos", "Miestas", 5600, 25.4181, 55.2264],
+    ["Kazlų Rūda", "Marijampolės", "Miestas", 5600, 23.49, 54.7489],
+    ["Skuodas", "Klaipėdos", "Miestas", 5500, 21.5233, 56.2683],
+    ["Širvintos", "Vilniaus", "Miestas", 5400, 24.9567, 55.0436],
+    ["Ignalina", "Utenos", "Miestas", 5300, 26.1647, 55.3406],
+    ["Trakai", "Vilniaus", "Miestas", 5000, 24.9343, 54.6378],
+    ["Šalčininkai", "Vilniaus", "Miestas", 5000, 25.3889, 54.3094],
+    ["Šakiai", "Marijampolės", "Miestas", 4800, 23.0461, 54.9531],
+    ["Šilalė", "Tauragės", "Miestas", 4700, 22.1847, 55.4917],
+    ["Pakruojis", "Šiaulių", "Miestas", 4200, 23.8586, 55.9783],
+    ["Švenčionys", "Vilniaus", "Miestas", 4200, 26.1597, 55.1333],
+    ["Lazdijai", "Alytaus", "Miestas", 4000, 23.5156, 54.2342],
+    ["Kalvarija", "Marijampolės", "Miestas", 3800, 23.2269, 54.4144],
+    ["Rietavas", "Telšių", "Miestas", 3300, 21.9314, 55.7247],
+    ["Pagėgiai", "Tauragės", "Miestas", 1700, 21.9133, 55.1372],
+    ["Palanga", "Klaipėdos", "Kurortas", 17500, 21.0686, 55.9175],
+    ["Druskininkai", "Alytaus", "Kurortas", 13000, 23.9853, 54.0156],
+    ["Neringa", "Klaipėdos", "Kurortas", 3800, 21.0064, 55.3036],
+    ["Birštonas", "Kauno", "Kurortas", 2500, 24.03, 54.6044]
+  ],
+
+  // Lankytinos vietos: [pavadinimas, kategorija, miestas, aprašymas, ilguma, platuma]
+  vietos: [
+    ["Gedimino pilies bokštas", "Pilis", "Vilnius", "Vilniaus Aukštutinės pilies bokštas – valstybės simbolis.", 25.2908, 54.6867],
+    ["Vilniaus arkikatedra", "Šventovė", "Vilnius", "Šv. Stanislovo ir šv. Vladislovo arkikatedra bazilika.", 25.2877, 54.6858],
+    ["Aušros vartai", "Šventovė", "Vilnius", "Vienintelieji išlikę Vilniaus gynybinės sienos vartai.", 25.2896, 54.6743],
+    ["Trakų salos pilis", "Pilis", "Trakai", "Gotikinė pilis Galvės ežero saloje.", 24.9336, 54.6525],
+    ["Kernavės archeologinė vietovė", "UNESCO", "Kernavė", "Piliakalniai ir senoji Lietuvos sostinė (UNESCO).", 24.8514, 54.8869],
+    ["Europos centras", "Kita", "Purnuškės", "Geografinis Europos centras.", 25.3197, 54.9054],
+    ["Kauno pilis", "Pilis", "Kaunas", "Seniausia mūrinė pilis Lietuvoje.", 23.8853, 54.8986],
+    ["Pažaislio vienuolynas", "Šventovė", "Kaunas", "Baroko ansamblis prie Kauno marių.", 24.0244, 54.8761],
+    ["Rumšiškių liaudies buities muziejus", "Muziejus", "Rumšiškės", "Didžiausias Lietuvos muziejus po atviru dangumi.", 24.2, 54.8667],
+    ["Kryžių kalnas", "Šventovė", "Jurgaičiai", "Piligrimystės vieta su dešimtimis tūkstančių kryžių.", 23.4167, 56.0153],
+    ["Lietuvos jūrų muziejus", "Muziejus", "Klaipėda", "Jūrų muziejus ir delfinariumas Kopgalyje.", 21.0997, 55.7178],
+    ["Parnidžio kopa", "Gamta", "Nida", "Kuršių nerijos kopa su Saulės laikrodžiu (UNESCO).", 21.005, 55.29],
+    ["Raganų kalnas", "Gamta", "Juodkrantė", "Medinių skulptūrų parkas Kuršių nerijoje.", 21.117, 55.547],
+    ["Anykščių lajų takas", "Gamta", "Anykščiai", "Takas medžių lajų aukštyje ir apžvalgos bokštas.", 25.0581, 55.5072],
+    ["Ladakalnis", "Gamta", "Aukštaitijos NP", "Apžvalgos kalnas Aukštaitijos nacionaliniame parke.", 26.03, 55.37],
+    ["Šaltojo karo muziejus", "Muziejus", "Plokštinė", "Buvusi požeminė raketų bazė Žemaitijos NP.", 21.8522, 56.0267],
+    ["Grūto parkas", "Muziejus", "Druskininkai", "Sovietinių skulptūrų ekspozicija.", 24.0636, 54.0539]
+  ]
+};
+
+// Nebūtina: ArcGIS Location Platform API raktas (https://developers.arcgis.com).
+// Jei raktas nurodytas, maršrutas skaičiuojamas Esri Route servisu,
+// jei ne – naudojamas viešas OSRM maršrutizatorius (OpenStreetMap duomenys).
+window.APP_CONFIG = {
+  arcgisApiKey: ""
+};
+
+  </script>
+  <script src="https://js.arcgis.com/4.33/"></script>
+  <script>
+require(["esri/Map", "esri/views/MapView", "esri/views/SceneView", "esri/Graphic", "esri/layers/FeatureLayer", "esri/layers/GraphicsLayer", "esri/layers/SceneLayer", "esri/geometry/Point", "esri/geometry/Polyline", "esri/geometry/operators/geodesicBufferOperator", "esri/rest/route", "esri/rest/support/RouteParameters", "esri/rest/support/FeatureSet", "esri/core/reactiveUtils", "esri/widgets/Search", "esri/widgets/Home", "esri/widgets/Compass", "esri/widgets/Locate", "esri/widgets/ScaleBar", "esri/widgets/BasemapToggle", "esri/widgets/BasemapGallery", "esri/widgets/LayerList", "esri/widgets/Legend", "esri/widgets/Daylight", "esri/widgets/Weather", "esri/widgets/Expand", "esri/widgets/Fullscreen"], function (
+  Map, MapView, SceneView, Graphic, FeatureLayer, GraphicsLayer, SceneLayer, Point, Polyline, geodesicBufferOperator, route, RouteParameters, FeatureSet, reactiveUtils, Search, Home, Compass, Locate, ScaleBar, BasemapToggle, BasemapGallery, LayerList, Legend, Daylight, Weather, Expand, Fullscreen
+) {
+  // ================= Bendri sluoksniai, popup'ai, paieška =================
+  function sukurtiBendra() {
+  const D = window.LT_DATA;
+
+  // Geodezinis atstumas (haversino formulė), km
+  function atstumasKm(lon1, lat1, lon2, lat2) {
+    const R = 6371.0088;
+    const rad = Math.PI / 180;
+    const dLat = (lat2 - lat1) * rad;
+    const dLon = (lon2 - lon1) * rad;
+    const a = Math.sin(dLat / 2) ** 2 +
+      Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(dLon / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(a));
+  }
+
+  const TIPU_SPALVOS = {
+    "Didmiestis": "#c0392b",
+    "Apskrities centras": "#e67e22",
+    "Kurortas": "#16a085",
+    "Miestas": "#2c6fbb"
+  };
+
+  const VIETU_SPALVOS = {
+    "Pilis": "#8e44ad",
+    "Šventovė": "#d35400",
+    "UNESCO": "#b7950b",
+    "Muziejus": "#2471a3",
+    "Gamta": "#1e8449",
+    "Kita": "#566573"
+  };
+
+  // ---------- Miestai ----------
+  function miestuGrafikos() {
+    return D.miestai.map(function (m, i) {
+      return new Graphic({
+        geometry: { type: "point", longitude: m[4], latitude: m[5] },
+        attributes: {
+          ObjectID: i + 1,
+          pavadinimas: m[0],
+          apskritis: m[1] + " apskritis",
+          tipas: m[2],
+          gyventojai: m[3],
+          atstumas: Math.round(atstumasKm(D.sostine.lon, D.sostine.lat, m[4], m[5]))
+        }
+      });
+    });
+  }
+
+  const miestuPopup = {
+    title: "{pavadinimas}",
+    content: [
+      {
+        type: "fields",
+        fieldInfos: [
+          { fieldName: "apskritis", label: "Apskritis" },
+          { fieldName: "tipas", label: "Tipas" },
+          { fieldName: "gyventojai", label: "Gyventojai", format: { digitSeparator: true, places: 0 } },
+          { fieldName: "atstumas", label: "Atstumas iki Vilniaus, km" },
+          { fieldName: "expression/dalis", label: "Dalis nuo Lietuvos gyventojų" }
+        ]
+      }
+    ],
+    expressionInfos: [
+      {
+        name: "dalis",
+        title: "Dalis nuo Lietuvos gyventojų",
+        expression: "Text($feature.gyventojai / 2890000 * 100, '#0.00') + ' %'"
+      }
+    ]
+  };
+
+  function tipoRenderer() {
+    return {
+      type: "unique-value",
+      field: "tipas",
+      legendOptions: { title: "Miesto tipas" },
+      uniqueValueInfos: Object.keys(TIPU_SPALVOS).map(function (t) {
+        return {
+          value: t,
+          label: t,
+          symbol: {
+            type: "simple-marker",
+            style: t === "Kurortas" ? "diamond" : "circle",
+            size: t === "Didmiestis" ? 14 : t === "Miestas" ? 7 : 10,
+            color: TIPU_SPALVOS[t],
+            outline: { color: "white", width: 1 }
+          }
+        };
+      })
+    };
+  }
+
+  function sukurtiMiestus(extra) {
+    return new FeatureLayer(Object.assign({
+      title: "Lietuvos miestai",
+      source: miestuGrafikos(),
+      objectIdField: "ObjectID",
+      geometryType: "point",
+      spatialReference: { wkid: 4326 },
+      fields: [
+        { name: "ObjectID", type: "oid" },
+        { name: "pavadinimas", alias: "Pavadinimas", type: "string" },
+        { name: "apskritis", alias: "Apskritis", type: "string" },
+        { name: "tipas", alias: "Tipas", type: "string" },
+        { name: "gyventojai", alias: "Gyventojai", type: "integer" },
+        { name: "atstumas", alias: "Atstumas iki Vilniaus, km", type: "integer" }
+      ],
+      outFields: ["*"],
+      popupTemplate: miestuPopup,
+      renderer: tipoRenderer(),
+      labelingInfo: [{
+        labelExpressionInfo: { expression: "$feature.pavadinimas" },
+        where: "gyventojai >= 20000 OR tipas = 'Kurortas'",
+        symbol: {
+          type: "text",
+          color: "#1d1d1d",
+          haloColor: "white",
+          haloSize: 1.5,
+          font: { size: 10, weight: "bold", family: "Noto Sans" }
+        },
+        labelPlacement: "above-center"
+      }]
+    }, extra || {}));
+  }
+
+  // ---------- Lankytinos vietos ----------
+  function sukurtiVietas(extra) {
+    const grafikos = D.vietos.map(function (v, i) {
+      return new Graphic({
+        geometry: { type: "point", longitude: v[4], latitude: v[5] },
+        attributes: {
+          ObjectID: i + 1,
+          pavadinimas: v[0],
+          kategorija: v[1],
+          vietove: v[2],
+          aprasymas: v[3]
+        }
+      });
+    });
+
+    return new FeatureLayer(Object.assign({
+      title: "Lankytinos vietos",
+      source: grafikos,
+      objectIdField: "ObjectID",
+      geometryType: "point",
+      spatialReference: { wkid: 4326 },
+      fields: [
+        { name: "ObjectID", type: "oid" },
+        { name: "pavadinimas", alias: "Pavadinimas", type: "string" },
+        { name: "kategorija", alias: "Kategorija", type: "string" },
+        { name: "vietove", alias: "Vietovė", type: "string" },
+        { name: "aprasymas", alias: "Aprašymas", type: "string" }
+      ],
+      outFields: ["*"],
+      popupTemplate: {
+        title: "{pavadinimas}",
+        content: "<b>{kategorija}</b> · {vietove}<br>{aprasymas}"
+      },
+      renderer: {
+        type: "unique-value",
+        field: "kategorija",
+        legendOptions: { title: "Lankytinos vietos" },
+        uniqueValueInfos: Object.keys(VIETU_SPALVOS).map(function (k) {
+          return {
+            value: k,
+            label: k,
+            symbol: {
+              type: "simple-marker",
+              style: "square",
+              size: 9,
+              color: VIETU_SPALVOS[k],
+              outline: { color: "white", width: 1 }
+            }
+          };
+        })
+      }
+    }, extra || {}));
+  }
+
+  // ---------- Apskritys (Esri Living Atlas, filtruota Lietuvai) ----------
+  function sukurtiApskritis(extra) {
+    return new FeatureLayer(Object.assign({
+      title: "Lietuvos apskritys",
+      url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/World_Administrative_Divisions/FeatureServer/0",
+      definitionExpression: "COUNTRY = 'Lithuania'",
+      outFields: ["NAME", "ISO_CODE"],
+      opacity: 0.9,
+      renderer: {
+        type: "simple",
+        symbol: {
+          type: "simple-fill",
+          color: [255, 214, 0, 0.06],
+          outline: { color: [0, 106, 68, 0.9], width: 1.5 }
+        }
+      },
+      popupTemplate: {
+        title: "{NAME}",
+        content: [{
+          type: "fields",
+          fieldInfos: [
+            { fieldName: "ISO_CODE", label: "ISO kodas" },
+            { fieldName: "expression/plotas", label: "Plotas, km²" }
+          ]
+        }],
+        expressionInfos: [{
+          name: "plotas",
+          expression: "Text(AreaGeodetic($feature, 'square-kilometers'), '#,###')"
+        }]
+      }
+    }, extra || {}));
+  }
+
+  // ---------- Paieška su keliais šaltiniais ----------
+  function sukurtiPaieska(view, miestai, vietos, apskritys) {
+    return new Search({
+      view: view,
+      includeDefaultSources: false,
+      allPlaceholder: "Miestas, vieta ar adresas Lietuvoje",
+      sources: [
+        {
+          layer: miestai,
+          searchFields: ["pavadinimas"],
+          displayField: "pavadinimas",
+          exactMatch: false,
+          outFields: ["*"],
+          name: "Lietuvos miestai",
+          placeholder: "pvz. Kaunas",
+          zoomScale: 80000
+        },
+        {
+          layer: vietos,
+          searchFields: ["pavadinimas", "vietove"],
+          suggestionTemplate: "{pavadinimas} ({vietove})",
+          exactMatch: false,
+          outFields: ["*"],
+          name: "Lankytinos vietos",
+          placeholder: "pvz. Trakų salos pilis",
+          zoomScale: 20000
+        },
+        {
+          layer: apskritys,
+          searchFields: ["NAME"],
+          displayField: "NAME",
+          exactMatch: false,
+          outFields: ["NAME", "ISO_CODE"],
+          name: "Apskritys",
+          placeholder: "pvz. Utenos apskritis"
+        },
+        {
+          name: "Adresai Lietuvoje (ArcGIS World Geocoder)",
+          placeholder: "pvz. Gedimino pr. 1, Vilnius",
+          url: "https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer",
+          countryCode: "LTU",
+          singleLineFieldName: "SingleLine",
+          outFields: ["Addr_type", "Match_addr"],
+          zoomScale: 10000
+        }
+      ]
+    });
+  }
+
+  return {
+    atstumasKm: atstumasKm,
+    TIPU_SPALVOS: TIPU_SPALVOS,
+    tipoRenderer: tipoRenderer,
+    sukurtiMiestus: sukurtiMiestus,
+    sukurtiVietas: sukurtiVietas,
+    sukurtiApskritis: sukurtiApskritis,
+    sukurtiPaieska: sukurtiPaieska
+  };
+  }
+
+  const common = sukurtiBendra();
+
+  // ================= 2D žemėlapis (MapView) =================
+  function paleisti2D() {
+  const $ = (id) => document.getElementById(id);
+
+  // ---------------- 1. Žemėlapio įkėlimas (2D) ----------------
+  const apskritys = common.sukurtiApskritis();
+  const miestai = common.sukurtiMiestus();
+  const vietos = common.sukurtiVietas();
+  const grafikosSluoksnis = new GraphicsLayer({ title: "Vėliava (grafika)" });
+  const analizesSluoksnis = new GraphicsLayer({ title: "Analizės rezultatai", listMode: "hide" });
+
+  const map = new Map({
+    basemap: "topo-vector",
+    layers: [apskritys, analizesSluoksnis, grafikosSluoksnis, vietos, miestai]
+  });
+
+  const view = new MapView({
+    container: "viewDiv2d",
+    map: map,
+    center: [23.9, 55.2],
+    zoom: 7,
+    constraints: { minZoom: 5 },
+    popup: { dockEnabled: false, dockOptions: { breakpoint: false } }
+  });
+
+  function busena(tekstas) {
+    const el = $("busena");
+    el.textContent = tekstas || "";
+    el.style.display = tekstas ? "block" : "none";
+  }
+
+  // ---------------- 3. Valdikliai (widgets) ----------------
+  view.ui.add(new Home({ view: view }), "top-left");
+  view.ui.add(new Compass({ view: view }), "top-left");
+  view.ui.add(new Locate({ view: view }), "top-left");
+  view.ui.add(new Fullscreen({ view: view }), "top-left");
+  view.ui.add(new ScaleBar({ view: view, unit: "metric" }), "bottom-left");
+  view.ui.add(new BasemapToggle({ view: view, nextBasemap: "hybrid" }), "bottom-right");
+
+  view.ui.add(new Expand({
+    view: view,
+    content: new LayerList({ view: view }),
+    expandTooltip: "Sluoksniai",
+    group: "desine"
+  }), "top-right");
+  view.ui.add(new Expand({
+    view: view,
+    content: new Legend({ view: view }),
+    expandTooltip: "Legenda",
+    group: "desine"
+  }), "top-right");
+  view.ui.add(new Expand({
+    view: view,
+    content: new BasemapGallery({ view: view }),
+    expandTooltip: "Pagrindo žemėlapiai",
+    group: "desine"
+  }), "top-right");
+
+  // ---------------- 5. Paieška su keliais šaltiniais ----------------
+  const paieska = common.sukurtiPaieska(view, miestai, vietos, apskritys);
+  view.ui.add(paieska, { position: "manual" });
+  paieska.container.classList.add("paieska");
+  view.container.appendChild(paieska.container);
+
+  // ---------------- 4. Grafika: Lietuvos vėliava iš 6 elementų ----------------
+  function velVieta(lon, lat) { return { type: "point", longitude: lon, latitude: lat }; }
+  function staciakampis(x1, y1, x2, y2) {
+    return { type: "polygon", rings: [[[x1, y1], [x2, y1], [x2, y2], [x1, y2], [x1, y1]]] };
+  }
+
+  const x0 = 25.3197, y0 = 54.9054;         // Europos centras – stiebo pagrindas
+  const plotis = 1.3, juosta = 0.15, virsus = 55.65;
+  const velPopup = { title: "{pavadinimas}", content: "{aprasymas}" };
+
+  const veliava = [
+    new Graphic({
+      geometry: { type: "polyline", paths: [[[x0, y0], [x0, virsus + 0.05]]] },
+      symbol: { type: "simple-line", color: [90, 70, 50], width: 4 },
+      attributes: { pavadinimas: "Stiebas", aprasymas: "Linija (Polyline) nuo Europos centro." },
+      popupTemplate: velPopup
+    }),
+    new Graphic({
+      geometry: staciakampis(x0, virsus - juosta, x0 + plotis, virsus),
+      symbol: { type: "simple-fill", color: [253, 185, 19, 0.9], outline: { color: [60, 60, 60], width: 0.5 } },
+      attributes: { pavadinimas: "Geltona juosta", aprasymas: "Saulė, šviesa ir gerovė." },
+      popupTemplate: velPopup
+    }),
+    new Graphic({
+      geometry: staciakampis(x0, virsus - 2 * juosta, x0 + plotis, virsus - juosta),
+      symbol: { type: "simple-fill", color: [0, 106, 68, 0.9], outline: { color: [60, 60, 60], width: 0.5 } },
+      attributes: { pavadinimas: "Žalia juosta", aprasymas: "Gamta, laisvė ir viltis." },
+      popupTemplate: velPopup
+    }),
+    new Graphic({
+      geometry: staciakampis(x0, virsus - 3 * juosta, x0 + plotis, virsus - 2 * juosta),
+      symbol: { type: "simple-fill", color: [193, 39, 45, 0.9], outline: { color: [60, 60, 60], width: 0.5 } },
+      attributes: { pavadinimas: "Raudona juosta", aprasymas: "Drąsa ir už Lietuvą pralietas kraujas." },
+      popupTemplate: velPopup
+    }),
+    new Graphic({
+      geometry: velVieta(x0, y0),
+      symbol: { type: "simple-marker", style: "circle", size: 12, color: [90, 70, 50], outline: { color: "white", width: 2 } },
+      attributes: { pavadinimas: "Europos centras", aprasymas: "Taškas (Point) – stiebo pagrindas Purnuškėse." },
+      popupTemplate: velPopup
+    }),
+    new Graphic({
+      geometry: velVieta(x0 + plotis / 2, virsus + 0.1),
+      symbol: {
+        type: "text", text: "LIETUVA", color: [31, 41, 51],
+        haloColor: "white", haloSize: 2,
+        font: { size: 16, weight: "bold", family: "Noto Sans" }
+      },
+      attributes: { pavadinimas: "Užrašas", aprasymas: "Tekstinis simbolis (TextSymbol)." },
+      popupTemplate: velPopup
+    })
+  ];
+
+  $("velRodyti").onclick = function () {
+    grafikosSluoksnis.removeAll();
+    grafikosSluoksnis.addMany(veliava);
+    view.goTo({ target: veliava, zoom: 8 });
+  };
+  $("velSlepti").onclick = function () { grafikosSluoksnis.removeAll(); };
+  grafikosSluoksnis.addMany(veliava);
+
+  // ---------------- 7. Vizualizacija ----------------
+  const renderiai = {
+    tipas: {
+      aprasas: "Kiekvienas miesto tipas – atskira spalva ir forma (Visualize features by type).",
+      renderer: common.tipoRenderer()
+    },
+    klases: {
+      aprasas: "Miestai suskirstyti į 5 gyventojų skaičiaus klases (class breaks).",
+      renderer: {
+        type: "class-breaks",
+        field: "gyventojai",
+        legendOptions: { title: "Gyventojai" },
+        classBreakInfos: [
+          [0, 5000, "iki 5 tūkst.", "#fef0d9", 6],
+          [5000, 10000, "5–10 tūkst.", "#fdcc8a", 9],
+          [10000, 25000, "10–25 tūkst.", "#fc8d59", 12],
+          [25000, 100000, "25–100 tūkst.", "#e34a33", 16],
+          [100000, 1000000, "daugiau nei 100 tūkst.", "#b30000", 22]
+        ].map(function (k) {
+          return {
+            minValue: k[0], maxValue: k[1], label: k[2],
+            symbol: { type: "simple-marker", size: k[4], color: k[3], outline: { color: [80, 80, 80], width: 0.6 } }
+          };
+        })
+      }
+    },
+    dydis: {
+      aprasas: "Taško dydis tolygiai priklauso nuo gyventojų skaičiaus (continuous size).",
+      renderer: {
+        type: "simple",
+        symbol: { type: "simple-marker", color: [0, 106, 68, 0.6], outline: { color: "white", width: 1 } },
+        visualVariables: [{
+          type: "size",
+          field: "gyventojai",
+          legendOptions: { title: "Gyventojai" },
+          stops: [
+            { value: 2000, size: 5, label: "2 000" },
+            { value: 50000, size: 18, label: "50 000" },
+            { value: 600000, size: 48, label: "600 000" }
+          ]
+        }]
+      }
+    },
+    spalva: {
+      aprasas: "Spalva tolygiai kinta pagal geodezinį atstumą iki Vilniaus (continuous color).",
+      renderer: {
+        type: "simple",
+        symbol: { type: "simple-marker", size: 11, outline: { color: [60, 60, 60], width: 0.5 } },
+        visualVariables: [{
+          type: "color",
+          field: "atstumas",
+          legendOptions: { title: "Atstumas iki Vilniaus, km" },
+          stops: [
+            { value: 0, color: "#ffffcc", label: "0 km" },
+            { value: 100, color: "#a1dab4" },
+            { value: 200, color: "#41b6c4", label: "200 km" },
+            { value: 320, color: "#253494", label: "320 km" }
+          ]
+        }]
+      }
+    }
+  };
+
+  function taikytiVizualizacija() {
+    const r = renderiai[$("vizRezimas").value];
+    miestai.renderer = r.renderer;
+    $("vizAprasas").textContent = r.aprasas;
+  }
+  $("vizRezimas").onchange = taikytiVizualizacija;
+  $("vizAprasas").textContent = renderiai.tipas.aprasas;
+
+  // ---------------- 8. Duomenų užklausa ----------------
+  let paryskinimas = null;
+  let miestuLayerView = null;
+  view.whenLayerView(miestai).then(function (lv) { miestuLayerView = lv; });
+
+  function paryskinti(oids) {
+    if (paryskinimas) paryskinimas.remove();
+    paryskinimas = miestuLayerView && oids.length ? miestuLayerView.highlight(oids) : null;
+  }
+
+  function rodytiSarasa(el, features, antraste) {
+    const sarasas = features.map(function (f, i) {
+      const a = f.attributes;
+      return '<li data-i="' + i + '">' + a.pavadinimas + " – " +
+        a.gyventojai.toLocaleString("lt-LT") + " gyv.</li>";
+    }).join("");
+    el.innerHTML = antraste + (features.length ? "<ol>" + sarasas + "</ol>" : "");
+    el.querySelectorAll("li").forEach(function (li) {
+      li.onclick = function () {
+        const f = features[+li.dataset.i];
+        view.goTo({ target: f.geometry, zoom: 11 }).then(function () {
+          view.openPopup({ features: [f], location: f.geometry });
+        });
+      };
+    });
+  }
+
+  const apskrSarasas = [...new Set(window.LT_DATA.miestai.map((m) => m[1]))].sort((a, b) => a.localeCompare(b, "lt"));
+  apskrSarasas.forEach(function (a) {
+    const o = document.createElement("option");
+    o.value = a + " apskritis";
+    o.textContent = a + " apskritis";
+    $("qApskritis").appendChild(o);
+  });
+
+  function sqlTekstas(s) { return "'" + s.replace(/'/g, "''") + "'"; }
+
+  $("qVykdyti").onclick = async function () {
+    const salygos = [];
+    if ($("qApskritis").value) salygos.push("apskritis = " + sqlTekstas($("qApskritis").value));
+    if ($("qTipas").value) salygos.push("tipas = " + sqlTekstas($("qTipas").value));
+    const min = parseInt($("qMin").value, 10);
+    if (!isNaN(min)) salygos.push("gyventojai >= " + min);
+    const where = salygos.length ? salygos.join(" AND ") : "1=1";
+
+    const q = miestai.createQuery();
+    q.where = where;
+    q.outFields = ["*"];
+    q.returnGeometry = true;
+    q.orderByFields = ["gyventojai DESC"];
+
+    const stat = miestai.createQuery();
+    stat.where = where;
+    stat.outStatistics = [{ statisticType: "sum", onStatisticField: "gyventojai", outStatisticFieldName: "suma" }];
+
+    const [rez, statRez] = await Promise.all([miestai.queryFeatures(q), miestai.queryFeatures(stat)]);
+    const suma = statRez.features.length ? statRez.features[0].attributes.suma || 0 : 0;
+    paryskinti(rez.features.map((f) => f.attributes.ObjectID));
+    rodytiSarasa($("qRez"), rez.features,
+      "<b>Rasta miestų: " + rez.features.length + "</b>, iš viso " +
+      suma.toLocaleString("lt-LT") + " gyv.<code class='sql'>WHERE " + where + "</code>");
+    if (rez.features.length) view.goTo(rez.features);
+  };
+
+  $("qValyti").onclick = function () {
+    paryskinti([]);
+    $("qRez").innerHTML = "";
+  };
+
+  // ---------------- 6. Analizė: geodezinis buferis ----------------
+  let rezimas = null;
+
+  function nustatytiRezima(r) {
+    rezimas = r;
+    view.popupEnabled = !r;
+    $("buferisBtn").classList.toggle("aktyvus", r === "buferis");
+    busena(r === "buferis" ? "Spustelėkite žemėlapyje buferio centrą" : "");
+  }
+
+  $("buferisBtn").onclick = function () { nustatytiRezima(rezimas === "buferis" ? null : "buferis"); };
+  $("buferisValyti").onclick = function () {
+    analizesSluoksnis.graphics.removeMany(analizesSluoksnis.graphics.filter((g) => g.attributes && g.attributes.buferis));
+    $("buferisRez").innerHTML = "";
+    paryskinti([]);
+  };
+
+  view.on("click", async function (e) {
+    if (rezimas !== "buferis") return;
+    e.stopPropagation();
+    nustatytiRezima(null);
+    const km = Math.max(1, parseFloat($("buferisKm").value) || 30);
+
+    if (!geodesicBufferOperator.isLoaded()) await geodesicBufferOperator.load();
+    const buferis = geodesicBufferOperator.execute(e.mapPoint, km, { unit: "kilometers" });
+
+    $("buferisValyti").onclick();
+    analizesSluoksnis.addMany([
+      new Graphic({
+        geometry: buferis,
+        symbol: { type: "simple-fill", color: [193, 39, 45, 0.15], outline: { color: [193, 39, 45], width: 2 } },
+        attributes: { buferis: true }
+      }),
+      new Graphic({
+        geometry: e.mapPoint,
+        symbol: { type: "simple-marker", style: "cross", size: 14, outline: { color: [193, 39, 45], width: 3 } },
+        attributes: { buferis: true }
+      })
+    ]);
+
+    const q = miestai.createQuery();
+    q.geometry = buferis;
+    q.spatialRelationship = "intersects";
+    q.outFields = ["*"];
+    q.returnGeometry = true;
+    q.orderByFields = ["gyventojai DESC"];
+    const rez = await miestai.queryFeatures(q);
+    paryskinti(rez.features.map((f) => f.attributes.ObjectID));
+    const suma = rez.features.reduce((s, f) => s + f.attributes.gyventojai, 0);
+    rodytiSarasa($("buferisRez"), rez.features,
+      "<b>" + km + " km</b> spinduliu: " + rez.features.length + " miest., " +
+      suma.toLocaleString("lt-LT") + " gyv.");
+    view.goTo(buferis.extent.expand(1.2));
+  });
+
+  // ---------------- 6. Analizė: maršrutas ----------------
+  const miestuPavad = window.LT_DATA.miestai.map((m) => m[0]).sort((a, b) => a.localeCompare(b, "lt"));
+  ["mIs", "mPer", "mI"].forEach(function (id) {
+    const sel = $(id);
+    if (id === "mPer") sel.innerHTML = '<option value="">—</option>';
+    miestuPavad.forEach(function (p) {
+      const o = document.createElement("option");
+      o.value = o.textContent = p;
+      sel.appendChild(o);
+    });
+  });
+  $("mIs").value = "Vilnius";
+  $("mPer").value = "Trakai";
+  $("mI").value = "Kaunas";
+
+  function miestoTaskas(pav) {
+    const m = window.LT_DATA.miestai.find((x) => x[0] === pav);
+    return new Point({ longitude: m[4], latitude: m[5] });
+  }
+
+  async function esriMarsrutas(taskai, raktas) {
+    const params = new RouteParameters({
+      apiKey: raktas,
+      stops: new FeatureSet({
+        features: taskai.map((p, i) => new Graphic({ geometry: p, attributes: { Name: "Stotelė " + (i + 1) } }))
+      }),
+      outSpatialReference: view.spatialReference,
+      returnDirections: false
+    });
+    const rez = await route.solve(
+      "https://route-api.arcgis.com/arcgis/rest/services/World/Route/NAServer/Route_World", params);
+    const r = rez.routeResults[0].route;
+    return { geometry: r.geometry, km: r.attributes.Total_Kilometers, min: r.attributes.Total_TravelTime, saltinis: "Esri Route" };
+  }
+
+  async function osrmMarsrutas(taskai) {
+    const koord = taskai.map((p) => p.longitude.toFixed(5) + "," + p.latitude.toFixed(5)).join(";");
+    const atsakas = await fetch("https://router.project-osrm.org/route/v1/driving/" + koord +
+      "?overview=full&geometries=geojson");
+    const duom = await atsakas.json();
+    if (duom.code !== "Ok") throw new Error(duom.message || duom.code);
+    const r = duom.routes[0];
+    return {
+      geometry: new Polyline({ paths: [r.geometry.coordinates], spatialReference: { wkid: 4326 } }),
+      km: r.distance / 1000,
+      min: r.duration / 60,
+      saltinis: "OSRM (OpenStreetMap)"
+    };
+  }
+
+  $("marsrutasBtn").onclick = async function () {
+    const pav = [$("mIs").value, $("mPer").value, $("mI").value].filter(Boolean);
+    const taskai = pav.map(miestoTaskas);
+    $("marsrutasValyti").onclick();
+    $("marsrutasRez").textContent = "Skaičiuojama…";
+    try {
+      const raktas = (window.APP_CONFIG || {}).arcgisApiKey;
+      const r = raktas ? await esriMarsrutas(taskai, raktas) : await osrmMarsrutas(taskai);
+      analizesSluoksnis.add(new Graphic({
+        geometry: r.geometry,
+        symbol: { type: "simple-line", color: [0, 106, 68, 0.85], width: 5 },
+        attributes: { marsrutas: true }
+      }));
+      taskai.forEach(function (p, i) {
+        analizesSluoksnis.add(new Graphic({
+          geometry: p,
+          symbol: {
+            type: "simple-marker", size: 18, color: i === 0 ? [0, 106, 68] : i === taskai.length - 1 ? [193, 39, 45] : [253, 185, 19],
+            outline: { color: "white", width: 2 }
+          },
+          attributes: { marsrutas: true }
+        }));
+      });
+      const val = Math.floor(r.min / 60), min = Math.round(r.min % 60);
+      $("marsrutasRez").innerHTML = "<b>" + pav.join(" → ") + "</b><br>Atstumas: " +
+        r.km.toFixed(1).replace(".", ",") + " km · Laikas: " + (val ? val + " val. " : "") + min + " min." +
+        "<br><span class='pastaba'>Šaltinis: " + r.saltinis + "</span>";
+      view.goTo(r.geometry.extent.expand(1.3));
+    } catch (err) {
+      $("marsrutasRez").textContent = "Nepavyko apskaičiuoti maršruto: " + err.message;
+    }
+  };
+
+  $("marsrutasValyti").onclick = function () {
+    analizesSluoksnis.graphics.removeMany(analizesSluoksnis.graphics.filter((g) => g.attributes && g.attributes.marsrutas));
+    $("marsrutasRez").innerHTML = "";
+  };
+
+  }
+
+  // ================= 3D scena (SceneView) =================
+  function paleisti3D() {
+  const $ = (id) => document.getElementById(id);
+
+  // ---------------- 2. Sluoksniai su 3D simboliais ----------------
+  function cilindras(spalva) {
+    return {
+      type: "point-3d",
+      symbolLayers: [{
+        type: "object",
+        resource: { primitive: "cylinder" },
+        width: 3500,
+        material: { color: spalva }
+      }]
+    };
+  }
+
+  const miestai = common.sukurtiMiestus({
+    elevationInfo: { mode: "on-the-ground" },
+    maxScale: 150000,           // priartinus stulpeliai paslepiami, kad neužstotų vaizdo
+    renderer: {
+      type: "unique-value",
+      field: "tipas",
+      legendOptions: { title: "Miesto tipas" },
+      uniqueValueInfos: Object.keys(common.TIPU_SPALVOS).map(function (t) {
+        return { value: t, label: t, symbol: cilindras(common.TIPU_SPALVOS[t]) };
+      }),
+      visualVariables: [
+        {
+          type: "size",
+          field: "gyventojai",
+          axis: "height",
+          legendOptions: { title: "Gyventojai (stulpelio aukštis)" },
+          stops: [
+            { value: 2000, size: 1500 },
+            { value: 600000, size: 40000 }
+          ]
+        },
+        { type: "size", axis: "width-and-depth", useSymbolValue: true }
+      ]
+    },
+    labelingInfo: [{
+      labelExpressionInfo: { expression: "$feature.pavadinimas" },
+      where: "gyventojai >= 20000 OR tipas = 'Kurortas'",
+      symbol: {
+        type: "label-3d",
+        symbolLayers: [{
+          type: "text",
+          material: { color: "#1d1d1d" },
+          halo: { color: "white", size: 1.5 },
+          size: 11,
+          font: { weight: "bold" }
+        }]
+      }
+    }]
+  });
+
+  const vietos = common.sukurtiVietas({
+    elevationInfo: { mode: "relative-to-ground" },
+    featureReduction: { type: "selection" },
+    renderer: {
+      type: "simple",
+      symbol: {
+        type: "point-3d",
+        symbolLayers: [{
+          type: "icon",
+          resource: { primitive: "circle" },
+          size: 12,
+          material: { color: [193, 39, 45] },
+          outline: { color: "white", size: 2 }
+        }],
+        verticalOffset: { screenLength: 35, maxWorldLength: 2000, minWorldLength: 20 },
+        callout: { type: "line", size: 1.2, color: "white", border: { color: [60, 60, 60] } }
+      }
+    },
+    labelingInfo: [{
+      labelExpressionInfo: { expression: "$feature.pavadinimas" },
+      symbol: {
+        type: "label-3d",
+        symbolLayers: [{ type: "text", material: { color: "white" }, halo: { color: [60, 60, 60], size: 1 }, size: 10 }]
+      }
+    }]
+  });
+
+  const apskritys = common.sukurtiApskritis();
+
+  const pastatai = new SceneLayer({
+    title: "OpenStreetMap 3D pastatai",
+    portalItem: { id: "ca0470dbbddb4db28bad74ed39949e25" },
+    popupEnabled: false
+  });
+
+  const grafika = new GraphicsLayer({
+    title: "Gedimino bokšto modelis (3D grafika)",
+    elevationInfo: { mode: "relative-to-ground" }
+  });
+
+  // ---------------- 1. Scenos įkėlimas (3D) ----------------
+  const map = new Map({
+    basemap: "satellite",
+    ground: "world-elevation",
+    layers: [apskritys, pastatai, miestai, vietos, grafika]
+  });
+
+  const view = new SceneView({
+    container: "viewDiv3d",
+    map: map,
+    qualityProfile: "high",
+    camera: {
+      position: { longitude: 23.95, latitude: 52.95, z: 260000 },
+      heading: 0,
+      tilt: 48
+    },
+    environment: {
+      lighting: { type: "sun", directShadowsEnabled: true },
+      atmosphereEnabled: true,
+      starsEnabled: true
+    },
+    popup: { dockEnabled: false, dockOptions: { breakpoint: false } }
+  });
+
+  // ---------------- 3. Valdikliai ----------------
+  view.ui.add(new Home({ view: view }), "top-left");
+  view.ui.add(new Fullscreen({ view: view }), "top-left");
+  view.ui.add(new BasemapToggle({ view: view, nextBasemap: "topo-vector" }), "bottom-right");
+  view.ui.add(new Expand({ view: view, content: new LayerList({ view: view }), expandTooltip: "Sluoksniai", group: "d" }), "top-right");
+  view.ui.add(new Expand({ view: view, content: new Legend({ view: view }), expandTooltip: "Legenda", group: "d" }), "top-right");
+  view.ui.add(new Expand({ view: view, content: new Daylight({ view: view }), expandTooltip: "Dienos šviesa", group: "d" }), "top-right");
+  view.ui.add(new Expand({ view: view, content: new Weather({ view: view }), expandTooltip: "Orai", group: "d" }), "top-right");
+
+  // ---------------- 5. Paieška 3D ----------------
+  const paieska = common.sukurtiPaieska(view, miestai, vietos, apskritys);
+  paieska.goToOverride = function (v, params) {
+    const g = params.target.target;
+    const taskas = g && g.geometry && g.geometry.type === "point";
+    const tikslas = taskas ? { target: g.geometry, zoom: 15, tilt: 65 } : { target: g, tilt: 45 };
+    return v.goTo(tikslas, { duration: 2500 });
+  };
+  view.ui.add(paieska, { position: "manual" });
+  paieska.container.classList.add("paieska");
+  view.container.appendChild(paieska.container);
+
+  // ---------------- 4. 3D grafika: Gedimino bokštas iš 7 elementų ----------------
+  const cx = 25.2350, cy = 54.6845;                 // Vingio parkas
+  const mPerLon = 111320 * Math.cos(cy * Math.PI / 180);
+  function taskas(dxMetrai, z) {
+    return { type: "point", longitude: cx + dxMetrai / mPerLon, latitude: cy, z: z };
+  }
+  function objektas(primityvas, spalva, plotis, gylis, aukstis) {
+    return {
+      type: "point-3d",
+      symbolLayers: [{
+        type: "object",
+        resource: { primitive: primityvas },
+        width: plotis, depth: gylis, height: aukstis,
+        anchor: "bottom",
+        material: { color: spalva }
+      }]
+    };
+  }
+  const popup = { title: "{pavadinimas}", content: "{aprasymas}" };
+  function elementas(geometrija, simbolis, pav, apr) {
+    return new Graphic({ geometry: geometrija, symbol: simbolis, attributes: { pavadinimas: pav, aprasymas: apr }, popupTemplate: popup });
+  }
+
+  const bokstas = [
+    elementas(taskas(0, 0), objektas("cone", [74, 124, 58], 280, 280, 45),
+      "Pilies kalnas", "Kūgis (cone) – Gedimino kalno imitacija."),
+    elementas(taskas(0, 40), objektas("cylinder", [168, 72, 48], 55, 55, 100),
+      "Bokšto korpusas", "Cilindras (cylinder) iš raudonų plytų."),
+    elementas(taskas(0, 140), objektas("cylinder", [120, 50, 36], 64, 64, 14),
+      "Viršutinis aukštas", "Platesnis cilindras – apžvalgos aikštelė."),
+    elementas(taskas(0, 154), objektas("cylinder", [230, 230, 230], 2.5, 2.5, 80),
+      "Vėliavos stiebas", "Plonas cilindras – stiebas."),
+    elementas(taskas(32, 218), objektas("cube", [253, 185, 19], 60, 1.5, 12),
+      "Geltona juosta", "Kubas (cube) – saulė ir gerovė."),
+    elementas(taskas(32, 206), objektas("cube", [0, 106, 68], 60, 1.5, 12),
+      "Žalia juosta", "Kubas (cube) – gamta ir viltis."),
+    elementas(taskas(32, 194), objektas("cube", [193, 39, 45], 60, 1.5, 12),
+      "Raudona juosta", "Kubas (cube) – drąsa ir kraujas."),
+    elementas(taskas(0, 240), {
+      type: "point-3d",
+      symbolLayers: [{
+        type: "text",
+        text: "Gedimino bokštas (modelis)",
+        size: 14,
+        material: { color: [31, 41, 51] },
+        halo: { color: "white", size: 2 }
+      }],
+      verticalOffset: { screenLength: 50 },
+      callout: { type: "line", size: 1.5, color: [31, 41, 51] }
+    }, "Užrašas", "Tekstas su nuorodos linija (callout).")
+  ];
+  grafika.addMany(bokstas);
+
+  // ---------------- 10. Kameros valdymas ----------------
+  const greitosVietos = [
+    { pav: "Visa Lietuva", camera: { position: { longitude: 23.95, latitude: 52.95, z: 260000 }, heading: 0, tilt: 48 } },
+    { pav: "Vilniaus senamiestis", tikslas: [25.2878, 54.6847], zoom: 16, tilt: 70, heading: 330 },
+    { pav: "Gedimino bokštas (3D)", camera: { position: { longitude: cx, latitude: cy - 650 / 111320, z: 420 }, heading: 0, tilt: 72 } },
+    { pav: "Trakų pilis", tikslas: [24.9336, 54.6525], zoom: 16, tilt: 65, heading: 200 },
+    { pav: "Kauno senamiestis", tikslas: [23.8900, 54.8970], zoom: 16, tilt: 65, heading: 60 },
+    { pav: "Kuršių nerija", tikslas: [21.03, 55.30], zoom: 12, tilt: 72, heading: 300 }
+  ];
+
+  greitosVietos.forEach(function (v) {
+    const b = document.createElement("button");
+    b.className = "antrinis";
+    b.textContent = v.pav;
+    b.onclick = function () {
+      sustabdytiSkrydi();
+      const tikslas = v.camera || { center: v.tikslas, zoom: v.zoom, tilt: v.tilt, heading: v.heading };
+      view.goTo(tikslas, { duration: 3000 });
+    };
+    $("vietos").appendChild(b);
+  });
+  $("bokstasEiti").onclick = function () { $("vietos").children[2].click(); };
+
+  document.querySelectorAll("[data-kamera]").forEach(function (b) {
+    b.onclick = function () {
+      sustabdytiSkrydi();
+      const c = view.camera;
+      const veiksmai = {
+        kaire: { heading: c.heading - 30 },
+        desine: { heading: c.heading + 30 },
+        aukstyn: { tilt: Math.max(0, c.tilt - 15) },
+        zemyn: { tilt: Math.min(85, c.tilt + 15) },
+        arciau: { zoom: view.zoom + 1 },
+        toliau: { zoom: view.zoom - 1 },
+        virsus: { tilt: 0, heading: 0 }
+      };
+      view.goTo(veiksmai[b.dataset.kamera], { duration: 1000 });
+    };
+  });
+
+  let skrydis = null;
+  function sustabdytiSkrydi() {
+    if (skrydis) cancelAnimationFrame(skrydis);
+    skrydis = null;
+    $("skrydis").classList.remove("aktyvus");
+  }
+  $("skrydis").onclick = function () {
+    if (skrydis) return sustabdytiSkrydi();
+    $("skrydis").classList.add("aktyvus");
+    const zingsnis = function () {
+      view.goTo({ heading: view.camera.heading + 0.25 }, { animate: false });
+      skrydis = requestAnimationFrame(zingsnis);
+    };
+    zingsnis();
+  };
+  view.on("drag", sustabdytiSkrydi);
+
+  reactiveUtils.watch(() => view.camera, function (c) {
+    if (!c) return;
+    const p = c.position;
+    $("kameraInfo").textContent =
+      "Padėtis: " + p.latitude.toFixed(4) + "° š. pl., " + p.longitude.toFixed(4) + "° r. ilg.\n" +
+      "Aukštis: " + Math.round(p.z).toLocaleString("lt-LT") + " m · Kryptis: " + Math.round(c.heading) +
+      "° · Pokrypis: " + Math.round(c.tilt) + "°";
+  }, { initial: true });
+
+  // ---------------- 9. Realistinė aplinka ----------------
+  // Vietinį Lietuvos laiką (Europe/Vilnius) paverčiame UTC Date objektu.
+  function vilniausData(dataStr, minutes) {
+    const [y, m, d] = dataStr.split("-").map(Number);
+    const spejimas = Date.UTC(y, m - 1, d, Math.floor(minutes / 60), minutes % 60);
+    const dalys = new Intl.DateTimeFormat("en-US", {
+      timeZone: "Europe/Vilnius", hourCycle: "h23",
+      year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "numeric"
+    }).formatToParts(new Date(spejimas)).reduce(function (o, p) { o[p.type] = +p.value; return o; }, {});
+    const vietinis = Date.UTC(dalys.year, dalys.month - 1, dalys.day, dalys.hour, dalys.minute);
+    const poslinkisVal = (vietinis - spejimas) / 3600000;
+    return { date: new Date(spejimas - poslinkisVal * 3600000), utcPoslinkis: poslinkisVal };
+  }
+
+  function taikytiApsvietima() {
+    const min = +$("laikas").value;
+    $("laikasTxt").textContent = String(Math.floor(min / 60)).padStart(2, "0") + ":" + String(min % 60).padStart(2, "0");
+    const env = view.environment;
+    if ($("apsvietimas").value === "sun") {
+      const vd = vilniausData($("data").value || "2026-06-21", min);
+      env.lighting = {
+        type: "sun",
+        date: vd.date,
+        displayUTCOffset: vd.utcPoslinkis,
+        directShadowsEnabled: $("seseliai").checked
+      };
+    } else {
+      env.lighting = { type: "virtual", directShadowsEnabled: $("seseliai").checked };
+    }
+  }
+
+  function taikytiOrus() {
+    const tipas = $("orai").value;
+    const parametrai = {
+      sunny: { type: "sunny", cloudCover: 0.2 },
+      cloudy: { type: "cloudy", cloudCover: 0.8 },
+      rainy: { type: "rainy", cloudCover: 0.8, precipitation: 0.6 },
+      snowy: { type: "snowy", cloudCover: 0.8, precipitation: 0.5, snowCover: "enabled" },
+      foggy: { type: "foggy", fogStrength: 0.6 }
+    };
+    view.environment.weather = parametrai[tipas];
+  }
+
+  ["laikas", "data", "apsvietimas", "seseliai"].forEach(function (id) { $(id).addEventListener("input", taikytiApsvietima); });
+  $("orai").onchange = taikytiOrus;
+  $("zvaigzdes").onchange = function () { view.environment.starsEnabled = this.checked; };
+  $("atmosfera").onchange = function () { view.environment.atmosphereEnabled = this.checked; };
+  document.querySelectorAll("[data-laikas]").forEach(function (b) {
+    b.onclick = function () {
+      $("laikas").value = b.dataset.laikas;
+      taikytiApsvietima();
+    };
+  });
+
+  view.when(function () {
+    taikytiApsvietima();
+    taikytiOrus();
+  });
+
+  }
+
+  // ================= 2D / 3D perjungimas =================
+  let ijungta3D = false;
+  function rodyti(rezimas) {
+    document.querySelectorAll("[data-rezimas]").forEach(function (el) {
+      el.style.display = el.dataset.rezimas === rezimas ? "" : "none";
+    });
+    document.getElementById("btn2d").classList.toggle("antrinis", rezimas !== "2d");
+    document.getElementById("btn3d").classList.toggle("antrinis", rezimas !== "3d");
+    if (rezimas === "3d" && !ijungta3D) { ijungta3D = true; paleisti3D(); }
+  }
+  document.getElementById("btn2d").onclick = function () { rodyti("2d"); };
+  document.getElementById("btn3d").onclick = function () { rodyti("3d"); };
+  paleisti2D();
+  rodyti("2d");
+});
+
+  </script>
+</body>
+</html>
