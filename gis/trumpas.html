@@ -9,8 +9,7 @@
     html, body { margin: 0; height: 100%; font-family: sans-serif; }
     #mygtukai { padding: 6px; background: #eee; }
     #info { padding: 4px 6px; font-size: 14px; }
-    #vaizdai { display: flex; height: calc(100% - 75px); }
-    arcgis-map, arcgis-scene { flex: 1; }
+    arcgis-map { display: block; height: calc(100% - 75px); }
   </style>
 </head>
 <body>
@@ -18,25 +17,21 @@
   <div id="mygtukai">
     <button id="uzklausa">8. Miestai &gt; 50 000 gyv.</button>
     <button id="diena">9. Paleisti dienos ciklą</button>
-    <button id="sukti">10. Pasukti kamerą</button>
-    <button id="pakreipti">10. Pakreipti kamerą</button>
-    <button id="isVirsaus">10. Vaizdas iš viršaus</button>
+    <button id="sukti">10. Pasukti žemėlapį</button>
+    <button id="vilnius">10. Skristi į Vilnių</button>
+    <button id="atgal">10. Atgal (visa Lietuva)</button>
   </div>
-  <div id="info">6. Spustelėkite 2D žemėlapį – bus apskaičiuotas atstumas iki Vilniaus.</div>
+  <div id="info">6. Spustelėkite žemėlapį – bus apskaičiuotas atstumas iki Vilniaus.</div>
 
-  <div id="vaizdai">
-    <!-- 1. 2D žemėlapis ir 3. penki valdikliai (mygtukai) -->
-    <arcgis-map basemap="topo-vector" center="23.4, 55.2" zoom="6">
-      <arcgis-zoom slot="top-left"></arcgis-zoom>
-      <arcgis-home slot="top-left"></arcgis-home>
-      <arcgis-compass slot="top-left"></arcgis-compass>
-      <arcgis-basemap-toggle slot="bottom-right" next-basemap="hybrid"></arcgis-basemap-toggle>
-      <arcgis-legend slot="bottom-left"></arcgis-legend>
-      <arcgis-search slot="top-right" all-placeholder="Miestas arba adresas" include-default-sources-disabled></arcgis-search>
-    </arcgis-map>
-    <!-- 1. 3D scena -->
-    <arcgis-scene basemap="satellite" ground="world-elevation"></arcgis-scene>
-  </div>
+  <!-- 1. 2D žemėlapis ir 3. penki valdikliai (mygtukai) -->
+  <arcgis-map basemap="topo-vector" center="23.4, 55.2" zoom="7">
+    <arcgis-zoom slot="top-left"></arcgis-zoom>
+    <arcgis-home slot="top-left"></arcgis-home>
+    <arcgis-compass slot="top-left"></arcgis-compass>
+    <arcgis-basemap-toggle slot="bottom-right" next-basemap="hybrid"></arcgis-basemap-toggle>
+    <arcgis-legend slot="bottom-left"></arcgis-legend>
+    <arcgis-search slot="top-right" all-placeholder="Miestas arba adresas" include-default-sources-disabled></arcgis-search>
+  </arcgis-map>
 
   <script type="module">
     const [FeatureLayer, Graphic, GraphicsLayer, Point, atstumas] = await $arcgis.import([
@@ -47,7 +42,6 @@
       "@arcgis/core/geometry/operators/geodeticDistanceOperator.js"
     ]);
     const zemelapis = document.querySelector("arcgis-map");
-    const scena = document.querySelector("arcgis-scene");
     const info = document.getElementById("info");
 
     // ---------- 2. Sluoksnis: Lietuvos miestai (pavadinimas, gyventojai, ilguma, platuma) ----------
@@ -85,7 +79,7 @@
     zemelapis.map.add(sluoksnis);
 
     // ---------- 4. 2D grafika: kaktusas iš 7 elementų (Baltijos jūroje, kad neuždengtų miestų) ----------
-    const t = (x, y) => [19.7 + x * 0.1, 55 + y * 0.06];      // patogios koordinatės
+    const t = (x, y) => [19.9 + x * 0.1, 55 + y * 0.06];      // patogios koordinatės
     const figura = (taskai, spalva) => new Graphic({
       geometry: { type: "polygon", rings: [taskai.map((p) => t(p[0], p[1]))] },
       symbol: { type: "simple-fill", color: spalva, outline: { color: "black" } }
@@ -143,31 +137,25 @@
       info.textContent = "8. Rasta: " + rezultatas.features.map((f) => f.attributes.pavadinimas).join(", ");
     };
 
-    // ---------- 3D scena: kamera virš Vilniaus senamiesčio ----------
-    await scena.viewOnReady();
-    scena.camera = { position: { longitude: 25.2878, latitude: 54.676, z: 900 }, tilt: 65, heading: 0 };
-
-    // ---------- 9. Realistinė aplinka: saulė kyla ir leidžiasi (visa para) ----------
-    scena.environment.starsEnabled = true;
-    scena.environment.atmosphereEnabled = true;
-    scena.environment.lighting = { type: "sun", directShadowsEnabled: true };
+    // ---------- 9. Dienos ciklas: žemėlapis šviesėja (diena) ir tamsėja (naktis) ----------
     let ciklas = null;
     document.getElementById("diena").onclick = () => {
       if (ciklas) { clearInterval(ciklas); ciklas = null; return; }   // antras paspaudimas sustabdo
       let minutes = 0;
       ciklas = setInterval(() => {
         minutes = (minutes + 10) % (24 * 60);
-        // 2026-06-21, Lietuvos vasaros laikas = UTC+3
-        const data = new Date(Date.UTC(2026, 5, 21, 0, minutes) - 3 * 3600 * 1000);
-        scena.environment.lighting.date = data;
-        info.textContent = "9. Laikas: " + Math.floor(minutes / 60) + ":" + String(minutes % 60).padStart(2, "0");
+        const valanda = minutes / 60;
+        // saulė: 0 naktį, 1 vidurdienį (sinuso kreivė tarp 6 ir 18 val.)
+        const saule = Math.max(0, Math.sin((valanda - 6) / 12 * Math.PI));
+        zemelapis.map.basemap.baseLayers.forEach((l) => { l.effect = "brightness(" + (0.3 + 0.8 * saule) + ")"; });
+        info.textContent = "9. Laikas: " + Math.floor(valanda) + ":" + String(minutes % 60).padStart(2, "0");
       }, 100);
     };
 
-    // ---------- 10. Kameros padėties valdymas ----------
-    document.getElementById("sukti").onclick = () => scena.goTo({ heading: scena.camera.heading + 45 });
-    document.getElementById("pakreipti").onclick = () => scena.goTo({ tilt: scena.camera.tilt > 40 ? 30 : 75 });
-    document.getElementById("isVirsaus").onclick = () => scena.goTo({ tilt: 0 });
+    // ---------- 10. Žemėlapio padėties valdymas ----------
+    document.getElementById("sukti").onclick = () => { zemelapis.rotation = zemelapis.rotation + 45; };
+    document.getElementById("vilnius").onclick = () => zemelapis.goTo({ center: [25.28, 54.69], zoom: 12 });
+    document.getElementById("atgal").onclick = () => zemelapis.goTo({ center: [23.4, 55.2], zoom: 7, rotation: 0 });
   </script>
 </body>
 </html>
