@@ -6,6 +6,11 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
+/**
+ * UNIT TESTAI funkcijoms iš Logic.kt.
+ * Kiekvienas @Test – atskiras patikrinimas: assertEquals(tikėtasi, gauta).
+ * Paleisti: dešiniu pelės mygtuku ant failo → Run 'LogicTest'.
+ */
 class LogicTest {
 
     private val delta = 1e-9

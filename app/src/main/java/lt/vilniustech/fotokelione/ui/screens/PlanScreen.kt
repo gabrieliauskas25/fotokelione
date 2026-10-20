@@ -1,6 +1,7 @@
 package lt.vilniustech.fotokelione.ui.screens
 
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,13 +24,15 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddLocationAlt
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Park
+import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
@@ -39,10 +42,10 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
@@ -64,10 +67,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -78,60 +83,76 @@ import lt.vilniustech.fotokelione.Place
 import lt.vilniustech.fotokelione.PlaceFilter
 import lt.vilniustech.fotokelione.PlannerViewModel
 import lt.vilniustech.fotokelione.TimeOfDay
+import lt.vilniustech.fotokelione.ui.components.EmptyState
+import lt.vilniustech.fotokelione.ui.components.HeroCard
+import lt.vilniustech.fotokelione.ui.components.IconCircle
+import lt.vilniustech.fotokelione.ui.components.icon
 import lt.vilniustech.fotokelione.validateName
 import kotlin.math.roundToInt
 
+/*
+ * ============================================================================
+ *  PlanScreen.kt – 1 EKRANAS „PLANAS“ (fotografavimo vietos)
+ * ============================================================================
+ *  Ekrano dalys (iš viršaus į apačią):
+ *   ProgressHeader  – spalvota kortelė su progreso juosta (LinearProgressIndicator)
+ *   FilterRow       – filtro žymos Visi / Laukia / Atlikta (FilterChip)
+ *   PlaceCard       – vietos kortelė: varnelė (Checkbox), išsiskleidimas
+ *                     (animateContentSize), šalinimas + Snackbar „Atšaukti“
+ *   FAB „Nauja vieta“ – atidaro AddPlaceDialog
+ *   AddPlaceDialog  – forma: tekstinis laukas su tikrinimu, išskleidžiamas
+ *                     sąrašas, radijo mygtukai, slankiklis, jungiklis
+ *
+ *  Tinklelis (LazyVerticalGrid + GridCells.Adaptive) pats parenka stulpelių
+ *  skaičių: telefone 1 stulpelis, planšetėje 2–3.
+ * ============================================================================
+ */
+
 @Composable
 fun PlanScreen(viewModel: PlannerViewModel, snackbarHostState: SnackbarHostState) {
+    // Korutina reikalinga Snackbar'ui parodyti (showSnackbar laukia vartotojo).
     val scope = rememberCoroutineScope()
+    // Ar rodomas dialogas „Nauja vieta“. rememberSaveable – išlieka pasukus ekraną.
     var showAddDialog by rememberSaveable { mutableStateOf(false) }
 
     Box(Modifier.fillMaxSize()) {
         LazyVerticalGrid(
-            columns = GridCells.Adaptive(minSize = 300.dp),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 88.dp),
+            columns = GridCells.Adaptive(minSize = 320.dp), // prisitaikantis stulpelių skaičius
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 96.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxSize(),
         ) {
+            // span = maxLineSpan → elementas užima visą eilutės plotį
             item(span = { GridItemSpan(maxLineSpan) }) {
                 ProgressHeader(
-                    done = viewModel.places.count { it.done },
+                    done = viewModel.doneCount,
                     total = viewModel.places.size,
                     progress = viewModel.progress,
                 )
             }
             item(span = { GridItemSpan(maxLineSpan) }) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    PlaceFilter.entries.forEach { filter ->
-                        FilterChip(
-                            selected = viewModel.placeFilter == filter,
-                            onClick = { viewModel.placeFilter = filter },
-                            label = { Text(filter.label) },
-                            leadingIcon = if (viewModel.placeFilter == filter) {
-                                { Icon(Icons.Filled.Check, contentDescription = null, Modifier.size(18.dp)) }
-                            } else {
-                                null
-                            },
-                        )
-                    }
-                }
+                FilterRow(
+                    selected = viewModel.placeFilter,
+                    countFor = viewModel::countFor,
+                    onSelect = { viewModel.placeFilter = it },
+                )
             }
+
             if (viewModel.visiblePlaces.isEmpty()) {
                 item(span = { GridItemSpan(maxLineSpan) }) {
-                    Text(
-                        "Šiame sąraše vietų nėra.",
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(vertical = 24.dp),
-                    )
+                    EmptyState(Icons.Filled.PhotoCamera, "Šiame sąraše vietų nėra")
                 }
             }
+
+            // Kiekvienai matomai vietai – po kortelę. key = id padeda animacijoms.
             items(viewModel.visiblePlaces, key = { it.id }) { place ->
                 PlaceCard(
                     place = place,
                     onToggleDone = { viewModel.togglePlaceDone(place.id) },
                     onDelete = {
                         val removed = viewModel.removePlace(place.id) ?: return@PlaceCard
+                        // Parodome Snackbar su mygtuku „Atšaukti“
                         scope.launch {
                             snackbarHostState.currentSnackbarData?.dismiss()
                             val result = snackbarHostState.showSnackbar(
@@ -148,18 +169,22 @@ fun PlanScreen(viewModel: PlannerViewModel, snackbarHostState: SnackbarHostState
             }
         }
 
-        FloatingActionButton(
+        // FAB – plaukiojantis veiksmo mygtukas apačioje dešinėje
+        ExtendedFloatingActionButton(
             onClick = { showAddDialog = true },
-            modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
-        ) {
-            Icon(Icons.Filled.Add, contentDescription = "Pridėti vietą")
-        }
+            icon = { Icon(Icons.Filled.Add, contentDescription = null) },
+            text = { Text("Nauja vieta") },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp),
+        )
     }
 
     if (showAddDialog) {
         AddPlaceDialog(
             onDismiss = { showAddDialog = false },
             onAdd = { name, category, time, priority, outdoor ->
+                // Dialogą uždarome tik tada, kai vieta sėkmingai pridėta
                 if (viewModel.addPlace(name, category, time, priority, outdoor) == null) {
                     showAddDialog = false
                 }
@@ -168,41 +193,108 @@ fun PlanScreen(viewModel: PlannerViewModel, snackbarHostState: SnackbarHostState
     }
 }
 
+/** Spalvota kortelė viršuje: „Nufotografuota X iš Y“ + procentai + progreso juosta. */
 @Composable
 private fun ProgressHeader(done: Int, total: Int, progress: Float) {
-    Card(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp)) {
-            Text("Nufotografuota $done iš $total", style = MaterialTheme.typography.titleMedium)
-            Spacer(Modifier.height(8.dp))
-            LinearProgressIndicator(
-                progress = { progress },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .semantics { contentDescription = "Progresas ${(progress * 100).roundToInt()} %" },
+    val percent = (progress * 100).roundToInt()
+    HeroCard {
+        Text("Kelionės progresas", style = MaterialTheme.typography.labelLarge, color = Color.White.copy(alpha = 0.85f))
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text("$percent %", style = MaterialTheme.typography.headlineMedium)
+            Spacer(Modifier.weight(1f))
+            Text("Nufotografuota $done iš $total", style = MaterialTheme.typography.bodyMedium)
+        }
+        Spacer(Modifier.height(12.dp))
+        LinearProgressIndicator(
+            progress = { progress },
+            color = Color.White,
+            trackColor = Color.White.copy(alpha = 0.3f),
+            strokeCap = StrokeCap.Round,
+            gapSize = 0.dp,
+            drawStopIndicator = {},
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(8.dp)
+                .semantics { contentDescription = "Progresas $percent procentų" },
+        )
+    }
+}
+
+/** Filtro žymos su skaičiumi, pvz. „Laukia (1)“. */
+@Composable
+private fun FilterRow(
+    selected: PlaceFilter,
+    countFor: (PlaceFilter) -> Int,
+    onSelect: (PlaceFilter) -> Unit,
+) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        PlaceFilter.entries.forEach { filter ->
+            FilterChip(
+                selected = selected == filter,
+                onClick = { onSelect(filter) },
+                label = { Text("${filter.label} (${countFor(filter)})") },
+                leadingIcon = if (selected == filter) {
+                    { Icon(Icons.Filled.Check, contentDescription = null, Modifier.size(18.dp)) }
+                } else {
+                    null
+                },
             )
         }
     }
 }
 
+/**
+ * Vienos vietos kortelė.
+ * Paspaudus kortelę – ji išsiskleidžia (animateContentSize) ir parodo detales.
+ * Rodyklė pasisuka (animateFloatAsState).
+ */
 @Composable
 private fun PlaceCard(place: Place, onToggleDone: () -> Unit, onDelete: () -> Unit) {
     var expanded by rememberSaveable(place.id) { mutableStateOf(false) }
+    val arrowRotation by animateFloatAsState(if (expanded) 180f else 0f, label = "rodyklė")
+    val colors = MaterialTheme.colorScheme
 
     Card(
         onClick = { expanded = !expanded },
-        colors = if (place.done) {
-            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
-        } else {
-            CardDefaults.cardColors()
-        },
+        colors = CardDefaults.cardColors(
+            containerColor = if (place.done) colors.surfaceContainerHigh else colors.surfaceContainerLow,
+        ),
         modifier = Modifier
             .fillMaxWidth()
-            .animateContentSize(),
+            .animateContentSize(), // ANIMACIJA: sklandus dydžio pokytis
     ) {
+        // --- Viršutinė eilutė: ikona, pavadinimas, varnelė, rodyklė ---
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
+            modifier = Modifier.padding(start = 12.dp, end = 4.dp, top = 12.dp, bottom = 12.dp),
         ) {
+            IconCircle(
+                icon = place.category.icon,
+                background = if (place.done) colors.tertiaryContainer else colors.primaryContainer,
+                tint = if (place.done) colors.onTertiaryContainer else colors.onPrimaryContainer,
+            )
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    place.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    textDecoration = if (place.done) TextDecoration.LineThrough else null,
+                    color = if (place.done) colors.onSurfaceVariant else colors.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    "${place.category.label} · ${place.timeOfDay.label}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colors.onSurfaceVariant,
+                )
+            }
+            Icon(
+                Icons.Filled.ExpandMore,
+                contentDescription = if (expanded) "Suskleisti" else "Išskleisti",
+                tint = colors.onSurfaceVariant,
+                modifier = Modifier.rotate(arrowRotation),
+            )
             Checkbox(
                 checked = place.done,
                 onCheckedChange = { onToggleDone() },
@@ -210,73 +302,80 @@ private fun PlaceCard(place: Place, onToggleDone: () -> Unit, onDelete: () -> Un
                     contentDescription = "Pažymėti „${place.name}“ kaip nufotografuotą"
                 },
             )
-            Column(Modifier.weight(1f)) {
-                Text(
-                    place.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    textDecoration = if (place.done) TextDecoration.LineThrough else null,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Text(
-                    "${place.category.label} · ${place.timeOfDay.label}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Icon(
-                if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
-                contentDescription = if (expanded) "Suskleisti" else "Išskleisti",
-            )
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Filled.Delete, contentDescription = "Šalinti „${place.name}“")
-            }
         }
+
+        // --- Išskleista dalis: prioritetas, žymos, šalinimo mygtukas ---
         if (expanded) {
-            Column(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Prioritetas: ", style = MaterialTheme.typography.bodyMedium)
-                    Row(Modifier.semantics { contentDescription = "Prioritetas ${place.priority} iš 5" }) {
-                        repeat(5) { i ->
+            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+            Column(Modifier.padding(16.dp)) {
+                PriorityStars(place.priority)
+                Spacer(Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    AssistChip(
+                        onClick = {},
+                        label = { Text(if (place.outdoor) "Lauke" else "Patalpoje") },
+                        leadingIcon = {
                             Icon(
-                                Icons.Filled.Star,
+                                if (place.outdoor) Icons.Filled.Park else Icons.Filled.Home,
                                 contentDescription = null,
-                                tint = if (i < place.priority) {
-                                    MaterialTheme.colorScheme.secondary
-                                } else {
-                                    MaterialTheme.colorScheme.outlineVariant
-                                },
                                 modifier = Modifier.size(18.dp),
                             )
-                        }
-                    }
+                        },
+                    )
+                    AssistChip(
+                        onClick = {},
+                        label = { Text(place.timeOfDay.label) },
+                        leadingIcon = {
+                            Icon(place.timeOfDay.icon, contentDescription = null, modifier = Modifier.size(18.dp))
+                        },
+                    )
                 }
-                Spacer(Modifier.height(8.dp))
-                AssistChip(
-                    onClick = {},
-                    label = { Text(if (place.outdoor) "Lauke" else "Patalpoje") },
-                    leadingIcon = {
-                        Icon(
-                            if (place.outdoor) Icons.Filled.Park else Icons.Filled.Home,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                        )
-                    },
-                )
+                TextButton(onClick = onDelete, modifier = Modifier.align(Alignment.End)) {
+                    Icon(Icons.Filled.Delete, contentDescription = null, tint = colors.error)
+                    Spacer(Modifier.width(4.dp))
+                    Text("Šalinti", color = colors.error)
+                }
             }
         }
     }
 }
 
+/** Prioritetas žvaigždutėmis: ★★★☆☆ */
+@Composable
+private fun PriorityStars(priority: Int) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.semantics(mergeDescendants = true) {
+            contentDescription = "Prioritetas $priority iš 5"
+        },
+    ) {
+        Text("Prioritetas", style = MaterialTheme.typography.bodyMedium)
+        Spacer(Modifier.width(8.dp))
+        repeat(5) { i ->
+            Icon(
+                if (i < priority) Icons.Filled.Star else Icons.Outlined.StarOutline,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.secondary,
+                modifier = Modifier.size(20.dp),
+            )
+        }
+    }
+}
+
+/**
+ * Dialogas „Nauja vieta“.
+ * Pavadinimas tikrinamas funkcija validateName (Logic.kt): tuščias arba
+ * ilgesnis nei 40 simbolių – laukas tampa raudonas su klaidos tekstu.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AddPlaceDialog(
     onDismiss: () -> Unit,
     onAdd: (String, Category, TimeOfDay, Int, Boolean) -> Unit,
 ) {
+    // Formos laukų būsena
     var name by rememberSaveable { mutableStateOf("") }
-    var nameTouched by rememberSaveable { mutableStateOf(false) }
+    var nameTouched by rememberSaveable { mutableStateOf(false) } // klaidą rodome tik pradėjus rašyti
     var category by rememberSaveable { mutableStateOf(Category.NATURE) }
     var categoryExpanded by rememberSaveable { mutableStateOf(false) }
     var timeOfDay by rememberSaveable { mutableStateOf(TimeOfDay.SUNSET) }
@@ -287,9 +386,11 @@ private fun AddPlaceDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        icon = { Icon(Icons.Filled.AddLocationAlt, contentDescription = null) },
         title = { Text("Nauja vieta") },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState())) {
+                // TEKSTINIS LAUKAS su tikrinimu
                 OutlinedTextField(
                     value = name,
                     onValueChange = {
@@ -305,6 +406,7 @@ private fun AddPlaceDialog(
                     modifier = Modifier.fillMaxWidth(),
                 )
 
+                // IŠSKLEIDŽIAMAS SĄRAŠAS (kategorija)
                 ExposedDropdownMenuBox(
                     expanded = categoryExpanded,
                     onExpandedChange = { categoryExpanded = it },
@@ -314,6 +416,7 @@ private fun AddPlaceDialog(
                         onValueChange = {},
                         readOnly = true,
                         label = { Text("Kategorija") },
+                        leadingIcon = { Icon(category.icon, contentDescription = null) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded) },
                         modifier = Modifier
                             .menuAnchor(MenuAnchorType.PrimaryNotEditable)
@@ -326,6 +429,7 @@ private fun AddPlaceDialog(
                         Category.entries.forEach { option ->
                             DropdownMenuItem(
                                 text = { Text(option.label) },
+                                leadingIcon = { Icon(option.icon, contentDescription = null) },
                                 onClick = {
                                     category = option
                                     categoryExpanded = false
@@ -335,7 +439,8 @@ private fun AddPlaceDialog(
                     }
                 }
 
-                Spacer(Modifier.height(12.dp))
+                // RADIJO MYGTUKAI (paros metas)
+                Spacer(Modifier.height(16.dp))
                 Text("Paros metas", style = MaterialTheme.typography.labelLarge)
                 Column(Modifier.selectableGroup()) {
                     TimeOfDay.entries.forEach { option ->
@@ -343,7 +448,7 @@ private fun AddPlaceDialog(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .selectable(
+                                .selectable( // visa eilutė paspaudžiama, ne tik apskritimas
                                     selected = timeOfDay == option,
                                     onClick = { timeOfDay = option },
                                     role = Role.RadioButton,
@@ -357,16 +462,18 @@ private fun AddPlaceDialog(
                     }
                 }
 
+                // SLANKIKLIS (prioritetas 1–5)
                 Spacer(Modifier.height(12.dp))
                 Text("Prioritetas: ${priority.roundToInt()}", style = MaterialTheme.typography.labelLarge)
                 Slider(
                     value = priority,
                     onValueChange = { priority = it },
                     valueRange = 1f..5f,
-                    steps = 3,
+                    steps = 3, // 3 tarpiniai taškai → reikšmės 1, 2, 3, 4, 5
                     modifier = Modifier.semantics { contentDescription = "Prioritetas" },
                 )
 
+                // JUNGIKLIS (lauke / patalpoje)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(if (outdoor) "Lauke" else "Patalpoje", Modifier.weight(1f))
                     Switch(
@@ -379,7 +486,7 @@ private fun AddPlaceDialog(
         },
         confirmButton = {
             TextButton(onClick = {
-                nameTouched = true
+                nameTouched = true // jei nieko neįvesta – parodys klaidą
                 onAdd(name, category, timeOfDay, priority.roundToInt(), outdoor)
             }) { Text("Pridėti") }
         },
