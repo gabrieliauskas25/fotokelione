@@ -6,176 +6,151 @@
   <script type="module" src="https://js.arcgis.com/5.1/"></script>
   <style>
     html, body { margin: 0; height: 100%; font-family: sans-serif; }
-    .juosta { padding: 4px 6px; background: #eee; }
-    .juosta input { width: 70px; }
-    #info { padding: 4px 6px; }
-    arcgis-scene { display: block; height: calc(100% - 125px); }
+    #juosta { padding: 6px; background: #eee; }
+    arcgis-scene { display: block; height: calc(100% - 70px); }
   </style>
 </head>
 <body>
-  <!-- Mygtukai: priartinimas prie miestų, užklausa (8), dienos ciklas (9), buferio dydis (6) -->
-  <div class="juosta">
+  <div id="juosta">
     <select id="miestas"></select> <button id="iMiesta">Priartinti prie miesto</button>
     <button id="didziausias">Didžiausias miestas</button>
     <button id="siauliai">Šiauliai</button> |
-    <button id="uzklausa">8. Miestai &gt; 50 000 gyv.</button>
-    <button id="diena">9. Paleisti dienos ciklą</button> |
-    6. Buferis <input id="buferisKm" type="number" value="50"> km
+    <button id="uzklausa">Miestai &gt; 50 000 gyv.</button>
+    <button id="diena">Dienos ciklas</button> |
+    Buferis <input id="buferisKm" type="number" value="50" style="width:50px"> km
+    <div id="info">Spustelėkite žemėlapį – bus nubrėžtas buferis.</div>
   </div>
-  <!-- 10. Kameros valdymas: X (ilguma), Y (platuma), pokrypis, kryptis -->
-  <div class="juosta">
-    10. Kamera: X <input id="kx" type="number" step="0.1"> Y <input id="ky" type="number" step="0.1">
-    Pokrypis <input id="kt" type="number" step="10">° Kryptis <input id="kh" type="number" step="45">°
-    <button id="taikyti">Perkelti kamerą</button> <button id="atgal">Atgal</button>
-  </div>
-  <div id="info">6. Spustelėkite žemėlapį – bus nubrėžtas buferis ir parodyti miestai jame.</div>
 
-  <!-- 1. 3D žemėlapis ir 3. valdikliai (mygtukai) -->
+  <!-- 3D žemėlapis ir valdikliai -->
   <arcgis-scene basemap="topo-vector" ground="world-elevation">
     <arcgis-zoom slot="top-left"></arcgis-zoom>
-    <arcgis-navigation-toggle slot="top-left"></arcgis-navigation-toggle>
     <arcgis-home slot="top-left"></arcgis-home>
     <arcgis-compass slot="top-left"></arcgis-compass>
     <arcgis-basemap-toggle slot="bottom-right" next-basemap="hybrid"></arcgis-basemap-toggle>
     <arcgis-legend slot="bottom-left"></arcgis-legend>
-    <arcgis-search slot="top-right" all-placeholder="Miestas arba adresas" include-default-sources-disabled></arcgis-search>
+    <arcgis-search slot="top-right" include-default-sources-disabled></arcgis-search>
   </arcgis-scene>
 
   <script type="module">
-    const [FeatureLayer, Graphic, GraphicsLayer, Camera, Point, buferis] = await $arcgis.import([
+    const [FeatureLayer, Graphic, GraphicsLayer, Point, buferis] = await $arcgis.import([
       "@arcgis/core/layers/FeatureLayer.js", "@arcgis/core/Graphic.js", "@arcgis/core/layers/GraphicsLayer.js",
-      "@arcgis/core/Camera.js", "@arcgis/core/geometry/Point.js", "@arcgis/core/geometry/operators/geodesicBufferOperator.js"
+      "@arcgis/core/geometry/Point.js", "@arcgis/core/geometry/operators/geodesicBufferOperator.js"
     ]);
     const zemelapis = document.querySelector("arcgis-scene");
-    const laukas = (id) => document.getElementById(id);
-    const rodyti = (tekstas) => { laukas("info").textContent = tekstas; };
+    const info = document.getElementById("info");
     await zemelapis.viewOnReady();
+    zemelapis.goTo({ center: [23.9, 55.0], zoom: 8, tilt: 50 });   // pradinis vaizdas: Lietuva įstrižai
 
-    // ---------- 2. Sluoksnis: Lietuvos miestai (pavadinimas, gyventojai, ilguma, platuma) ----------
+    // ---------- Miestai: pavadinimas, gyventojai, ilguma, platuma ----------
     const miestai = [
       ["Vilnius", 592000, 25.28, 54.69], ["Kaunas", 304000, 23.90, 54.90], ["Klaipėda", 158000, 21.14, 55.70],
       ["Šiauliai", 107000, 23.31, 55.93], ["Panevėžys", 86000, 24.36, 55.73], ["Alytus", 50000, 24.05, 54.40],
-      ["Marijampolė", 35500, 23.35, 54.56], ["Mažeikiai", 33000, 22.34, 56.31], ["Utena", 25500, 25.60, 55.50],
-      ["Telšiai", 22000, 22.25, 55.98], ["Tauragė", 21500, 22.29, 55.25], ["Palanga", 17500, 21.07, 55.92],
-      ["Druskininkai", 13000, 23.99, 54.02], ["Trakai", 5000, 24.93, 54.64], ["Neringa", 3800, 21.01, 55.30]
+      ["Marijampolė", 35500, 23.35, 54.56], ["Utena", 25500, 25.60, 55.50], ["Telšiai", 22000, 22.25, 55.98],
+      ["Palanga", 17500, 21.07, 55.92]
     ];
+
+    // ---------- Sluoksnis su miestais ----------
     const sluoksnis = new FeatureLayer({
       title: "Lietuvos miestai",
       objectIdField: "id",
-      fields: [{ name: "id", type: "oid" }, { name: "pavadinimas", type: "string" }, { name: "gyventojai", type: "integer" }],
+      fields: [
+        { name: "id", type: "oid" },
+        { name: "pavadinimas", type: "string" },
+        { name: "gyventojai", type: "integer" }
+      ],
       source: miestai.map((m, i) => new Graphic({
         geometry: { type: "point", longitude: m[2], latitude: m[3] },
-        attributes: { id: i + 1, pavadinimas: m[0], gyventojai: m[1] }
+        attributes: { id: i, pavadinimas: m[0], gyventojai: m[1] }
       })),
       popupTemplate: { title: "{pavadinimas}", content: "Gyventojų: {gyventojai}" },
-      // ---------- 7. Vizualizacija: kūgio formos bokštai, aukštis pagal gyventojų skaičių ----------
+      // Vizualizacija: kūgis, kuo daugiau gyventojų – tuo aukštesnis
       renderer: {
         type: "simple",
-        symbol: { type: "point-3d", symbolLayers: [{ type: "object", resource: { primitive: "cone" }, width: 10000, material: { color: [0, 106, 68] } }] },
+        symbol: { type: "point-3d", symbolLayers: [{ type: "object", resource: { primitive: "cone" }, width: 10000, material: { color: "green" } }] },
         visualVariables: [
           { type: "size", field: "gyventojai", axis: "height", stops: [{ value: 3000, size: 3000 }, { value: 600000, size: 60000 }] },
-          { type: "size", axis: "width-and-depth", useSymbolValue: true }   // plotis nekinta
+          { type: "size", axis: "width-and-depth", useSymbolValue: true }
         ]
       }
     });
     zemelapis.map.add(sluoksnis);
-    const pradzia = new Camera({ position: { longitude: 23.9, latitude: 52.9, z: 250000 }, tilt: 50, heading: 0 });
-    zemelapis.camera = pradzia;   // visa Lietuva įstrižai iš pietų
 
-    // ---------- 4. 3D grafika: besmegenis iš 5 elementų (prie Raseinių) ----------
-    const dalis = (forma, spalva, dydis, z, posvyris = 0, ilgis = dydis) => new Graphic({
-      geometry: { type: "point", longitude: 22.9, latitude: 55.0, z: z },
-      symbol: { type: "point-3d", symbolLayers: [{ type: "object", resource: { primitive: forma }, material: { color: spalva },
-        width: dydis, depth: dydis, height: ilgis, anchor: "bottom", tilt: posvyris }] }
-    });
+    // ---------- 3D grafika: besmegenis iš 5 dalių ----------
+    function dalis(forma, spalva, plotis, aukstis, z) {
+      return new Graphic({
+        geometry: { type: "point", longitude: 22.9, latitude: 55.0, z: z },
+        symbol: { type: "point-3d", symbolLayers: [{ type: "object", resource: { primitive: forma },
+          material: { color: spalva }, width: plotis, depth: plotis, height: aukstis, anchor: "bottom" }] }
+      });
+    }
     const besmegenis = new GraphicsLayer({ title: "Besmegenis", elevationInfo: { mode: "relative-to-ground" } });
     besmegenis.addMany([
-      dalis("sphere", "white", 16000, 0),               // 1 apatinis rutulys
-      dalis("sphere", "white", 12000, 14000),           // 2 vidurinis rutulys
-      dalis("sphere", "white", 8000, 25000),            // 3 galva
-      dalis("cylinder", "black", 6000, 32000),          // 4 kepurė
-      dalis("cone", "orange", 2000, 29000, 90, 8000)    // 5 nosis (morka), paversta 90°
+      dalis("sphere", "white", 16000, 16000, 0),        // 1 apatinis rutulys
+      dalis("sphere", "white", 12000, 12000, 14000),    // 2 vidurinis rutulys
+      dalis("sphere", "white", 8000, 8000, 25000),      // 3 galva
+      dalis("cylinder", "black", 10000, 1000, 32000),   // 4 kepurės kraštas
+      dalis("cylinder", "black", 6000, 6000, 33000)     // 5 kepurė
     ]);
     zemelapis.map.add(besmegenis);
 
-    // ---------- 5. Paieška keliuose šaltiniuose ----------
+    // ---------- Paieška: miestai + adresai Lietuvoje ----------
     const paieska = document.querySelector("arcgis-search");
     await paieska.componentOnReady();
     paieska.sources = [
-      { layer: sluoksnis, searchFields: ["pavadinimas"], displayField: "pavadinimas", exactMatch: false,
-        outFields: ["*"], name: "Lietuvos miestai", placeholder: "pvz. Kaunas" },
+      { layer: sluoksnis, searchFields: ["pavadinimas"], displayField: "pavadinimas", exactMatch: false, name: "Miestai" },
       { url: "https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer", singleLineFieldName: "SingleLine",
-        countryCode: "LTU", name: "Adresai Lietuvoje", placeholder: "pvz. Gedimino pr. 1, Vilnius" }
+        countryCode: "LTU", name: "Adresai" }
     ];
 
-    // ---------- 6. Analizė: geodezinis buferis ir kurie miestai į jį patenka ----------
-    const buferioSluoksnis = new GraphicsLayer({ title: "Buferis" });
+    // ---------- Analizė: buferis ir miestai jame ----------
+    const buferioSluoksnis = new GraphicsLayer();
     zemelapis.map.add(buferioSluoksnis);
     await buferis.load();
     zemelapis.addEventListener("arcgisViewClick", async (e) => {
-      const km = Number(laukas("buferisKm").value);
+      const km = Number(document.getElementById("buferisKm").value);
       const zona = buferis.execute(e.detail.mapPoint, km, { unit: "kilometers" });
       buferioSluoksnis.removeAll();
-      buferioSluoksnis.add(new Graphic({ geometry: zona, symbol: { type: "simple-fill", color: [255, 0, 0, 0.25], outline: { color: "red", width: 2 } } }));
-      const rez = await sluoksnis.queryFeatures({ geometry: zona, spatialRelationship: "intersects", outFields: ["*"] });
-      const sarasas = rez.features.map((f) => f.attributes.pavadinimas + " (" + f.attributes.gyventojai + " gyv.)");
-      rodyti("6. Buferyje " + km + " km: " + (sarasas.join(", ") || "miestų nėra"));
+      buferioSluoksnis.add(new Graphic({ geometry: zona, symbol: { type: "simple-fill", color: [255, 0, 0, 0.3] } }));
+      const rez = await sluoksnis.queryFeatures({ geometry: zona, outFields: ["pavadinimas"] });
+      const pavadinimai = rez.features.map((f) => f.attributes.pavadinimas);
+      info.textContent = "Buferyje: " + (pavadinimai.join(", ") || "miestų nėra");
     });
 
-    // ---------- 8. Duomenų užklausa: miestai, kuriuose daugiau nei 50 000 gyventojų ----------
-    laukas("uzklausa").onclick = async () => {
-      const rez = await sluoksnis.queryFeatures({ where: "gyventojai > 50000", outFields: ["pavadinimas"], orderByFields: ["gyventojai DESC"] });
-      rodyti("8. Rasta: " + rez.features.map((f) => f.attributes.pavadinimas).join(", "));
+    // ---------- Užklausa: miestai, kuriuose daugiau nei 50 000 gyventojų ----------
+    document.getElementById("uzklausa").onclick = async () => {
+      const rez = await sluoksnis.queryFeatures({ where: "gyventojai > 50000", outFields: ["pavadinimas"] });
+      info.textContent = "Rasta: " + rez.features.map((f) => f.attributes.pavadinimas).join(", ");
     };
 
     // ---------- Trys priartinimo mygtukai ----------
-    const priartinti = (ilguma, platuma) => zemelapis.goTo({ target: new Point({ longitude: ilguma, latitude: platuma }), zoom: 10, tilt: 60 });
-    miestai.forEach((m) => laukas("miestas").add(new Option(m[0], m[0])));   // užpildome miestų sąrašą
-    laukas("iMiesta").onclick = () => {
-      const m = miestai.find((x) => x[0] === laukas("miestas").value);
+    function priartinti(ilguma, platuma) {
+      zemelapis.goTo({ target: new Point({ longitude: ilguma, latitude: platuma }), zoom: 10, tilt: 60 });
+    }
+    miestai.forEach((m) => document.getElementById("miestas").add(new Option(m[0])));
+
+    document.getElementById("iMiesta").onclick = () => {
+      const m = miestai.find((x) => x[0] === document.getElementById("miestas").value);
       priartinti(m[2], m[3]);
     };
-    laukas("didziausias").onclick = async () => {   // didžiausią miestą randame užklausa
-      const rez = await sluoksnis.queryFeatures({ where: "1=1", orderByFields: ["gyventojai DESC"], num: 1, outFields: ["*"], returnGeometry: true });
-      const f = rez.features[0];
-      rodyti("Didžiausias miestas: " + f.attributes.pavadinimas + " (" + f.attributes.gyventojai + " gyv.)");
-      priartinti(f.geometry.longitude, f.geometry.latitude);
+    document.getElementById("didziausias").onclick = async () => {
+      const rez = await sluoksnis.queryFeatures({ where: "1=1", orderByFields: ["gyventojai DESC"], num: 1, returnGeometry: true });
+      const taskas = rez.features[0].geometry;
+      priartinti(taskas.longitude, taskas.latitude);
     };
-    laukas("siauliai").onclick = () => priartinti(23.31, 55.93);
+    document.getElementById("siauliai").onclick = () => priartinti(23.31, 55.93);
 
-    // ---------- 9. Realistinė aplinka: saulė kyla ir leidžiasi (visa para) ----------
+    // ---------- Realistinė aplinka: saulė kyla ir leidžiasi ----------
     zemelapis.environment.starsEnabled = true;
-    zemelapis.environment.atmosphereEnabled = true;
     zemelapis.environment.lighting = { type: "sun", directShadowsEnabled: true };
-    let ciklas = null;
-    laukas("diena").onclick = () => {
-      if (ciklas) { clearInterval(ciklas); ciklas = null; return; }   // antras paspaudimas sustabdo
-      let minutes = 0;
-      ciklas = setInterval(() => {
-        minutes = (minutes + 10) % (24 * 60);
-        // 2026-06-21, Lietuvos vasaros laikas = UTC+3
-        zemelapis.environment.lighting.date = new Date(Date.UTC(2026, 5, 21, 0, minutes) - 3 * 3600 * 1000);
-        rodyti("9. Laikas: " + Math.floor(minutes / 60) + ":" + String(minutes % 60).padStart(2, "0"));
+    let minutes = 0;
+    document.getElementById("diena").onclick = () => {
+      document.getElementById("diena").disabled = true;   // kad nepaleistume du kartus
+      setInterval(() => {
+        minutes = (minutes + 10) % 1440;                                     // 1440 min = para
+        zemelapis.environment.lighting.date = new Date(2026, 5, 21, 0, minutes);  // birželio 21 d.
+        info.textContent = "Laikas: " + Math.floor(minutes / 60) + " val.";
       }, 100);
     };
-
-    // ---------- 10. Kameros valdymas X, Y (aukštis paliekamas dabartinis) ----------
-    function rodytiKamera() {   // įrašo dabartinę kamerą į laukelius
-      const k = zemelapis.camera;
-      laukas("kx").value = k.position.longitude.toFixed(2);
-      laukas("ky").value = k.position.latitude.toFixed(2);
-      laukas("kt").value = Math.round(k.tilt);
-      laukas("kh").value = Math.round(k.heading);
-    }
-    laukas("taikyti").onclick = () => zemelapis.goTo(new Camera({
-      position: { longitude: Number(laukas("kx").value), latitude: Number(laukas("ky").value), z: zemelapis.camera.position.z },
-      tilt: Number(laukas("kt").value), heading: Number(laukas("kh").value)
-    }));
-    laukas("atgal").onclick = () => zemelapis.goTo(pradzia);
-    zemelapis.addEventListener("arcgisViewChange", () => {
-      if (document.activeElement.tagName !== "INPUT") rodytiKamera();   // netrukdome rašant
-    });
-    rodytiKamera();
   </script>
 </body>
 </html>
