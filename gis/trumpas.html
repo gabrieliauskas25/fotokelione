@@ -143,25 +143,9 @@
       info.textContent = "8. Rasta: " + rezultatas.features.map((f) => f.attributes.pavadinimas).join(", ");
     };
 
-    // ---------- 4. 3D grafika: sniego senis iš 5 elementų (Vingio parkas, Vilnius) ----------
+    // ---------- 3D scena: kamera virš Vilniaus senamiesčio ----------
     await scena.viewOnReady();
-    scena.camera = { position: { longitude: 25.235, latitude: 54.6785, z: 400 }, tilt: 65, heading: 0 };
-    const objektas = (forma, spalva, dydis, aukstis, z, posvyris = 0) => new Graphic({
-      geometry: { type: "point", longitude: 25.235, latitude: 54.6845, z: z },
-      symbol: { type: "point-3d", symbolLayers: [{
-        type: "object", resource: { primitive: forma }, material: { color: spalva },
-        width: dydis, depth: dydis, height: aukstis, anchor: "bottom", tilt: posvyris
-      }] }
-    });
-    const grafika3D = new GraphicsLayer({ elevationInfo: { mode: "relative-to-ground" } });
-    grafika3D.addMany([
-      objektas("sphere", "white", 60, 60, 0),           // 1 apatinis rutulys
-      objektas("sphere", "white", 45, 45, 52),          // 2 vidurinis rutulys
-      objektas("sphere", "white", 32, 32, 92),          // 3 galva
-      objektas("cylinder", "black", 24, 22, 120),       // 4 kepurė
-      objektas("cone", "orange", 7, 25, 108, 90)       // 5 nosis (morka)
-    ]);
-    scena.map.add(grafika3D);
+    scena.camera = { position: { longitude: 25.2878, latitude: 54.676, z: 900 }, tilt: 65, heading: 0 };
 
     // ---------- 9. Realistinė aplinka: saulė kyla ir leidžiasi (visa para) ----------
     scena.environment.starsEnabled = true;
