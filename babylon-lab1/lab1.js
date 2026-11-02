@@ -50,7 +50,7 @@ export const createScene = function () {
     zeme.receiveShadows = true;
 
     // pagalbinė funkcija: objektas meta šešėlį ir atsispindi veidrodyje
-    function iSceną(m) {
+    function iScena(m) {
         seseliai.addShadowCaster(m);
         mt.renderList.push(m);
     }
@@ -66,7 +66,7 @@ export const createScene = function () {
     kubas.material = km;
     kubas.parent = pivotas;
     kubas.position.x = 9;
-    iSceną(kubas);
+    iScena(kubas);
 
     var kubai = [kubas];
     for (var i = 1; i < 8; i++) {
@@ -74,7 +74,7 @@ export const createScene = function () {
         inst.parent = pivotas;
         var a = i * Math.PI * 2 / 8;
         inst.position = new BABYLON.Vector3(9 * Math.cos(a), 0, 9 * Math.sin(a));
-        iSceną(inst);
+        iScena(inst);
         kubai.push(inst);
     }
 
@@ -85,13 +85,13 @@ export const createScene = function () {
     var vm = new BABYLON.StandardMaterial("vm", scene);
     vm.diffuseColor = new BABYLON.Color3(0.6, 0.35, 0.15);
     vartai.material = vm;
-    iSceną(vartai);
+    iScena(vartai);
 
     // ---------------- DALELĖS ----------------
     // 1) Fontanas centre (nuolatinė sistema su gravitacija)
     var fontanas = BABYLON.MeshBuilder.CreateCylinder("fontanas", { diameterTop: 1, diameterBottom: 2, height: 1 }, scene);
     fontanas.position.y = 0.5;
-    iSceną(fontanas);
+    iScena(fontanas);
 
     var ps = new BABYLON.ParticleSystem("fontanoDaleles", 3000, scene);
     ps.particleTexture = new BABYLON.Texture("textures/flare.png", scene);
@@ -173,7 +173,7 @@ export const createScene = function () {
             mergina = rez.meshes[0];
             mergina.scaling.scaleInPlace(0.1);
             mergina.position = new BABYLON.Vector3(0, 0, -8);
-            rez.meshes.forEach(iSceną);
+            rez.meshes.forEach(iScena);
 
             anim.idle = scene.getAnimationGroupByName("Idle");
             anim.walk = scene.getAnimationGroupByName("Walking");
