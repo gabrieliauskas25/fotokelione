@@ -609,7 +609,7 @@ export const createScene = function () {
       }
     });
 
-    // intersectsMesh: lektuvas kliudo debesi - debesis "ispucia"
+    // intersectsMesh: lektuvas kliudo debesi - debesis susiploja
     clouds.forEach(function (c) {
       c.scaling.y += ((wings.intersectsMesh(c, false) ? 0.6 : 1) * c.scaling.x - c.scaling.y) * 0.1;
     });
