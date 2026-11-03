@@ -200,23 +200,7 @@ export const createScene = function () {
   hoop.material = hoopMat;
   mirror.renderList.push(hoop);
 
-  // daleles 1 - dumai is duslintuvo
-  var smoke = new BABYLON.ParticleSystem("smoke", 1000, scene);
-  smoke.particleTexture = new BABYLON.Texture("textures/flare.png", scene);
-  smoke.emitter = exhaust;
-  smoke.color1 = new BABYLON.Color4(0.8, 0.8, 0.8, 1);
-  smoke.color2 = new BABYLON.Color4(0.5, 0.5, 0.5, 1);
-  smoke.colorDead = new BABYLON.Color4(0.3, 0.3, 0.3, 0);
-  smoke.minSize = 0.2;
-  smoke.maxSize = 0.5;
-  smoke.minLifeTime = 0.5;
-  smoke.maxLifeTime = 1.5;
-  smoke.emitRate = 100;
-  smoke.direction1 = new BABYLON.Vector3(0, 0.5, -1);
-  smoke.direction2 = new BABYLON.Vector3(0, 1, -1);
-  smoke.start();
-
-  // daleles 2 - fejerverkas prie lanko
+  // daleles - fejerverkas prie lanko
   var fireworks = new BABYLON.ParticleSystem("fireworks", 1000, scene);
   fireworks.particleTexture = new BABYLON.Texture("textures/flare.png", scene);
   fireworks.emitter = hoop;
