@@ -345,274 +345,97 @@ export const createScene = function () {
   strut2.material = darkMat;
   strut2.parent = plane;
 
-  // =====================================================================
-  // PAPILDYMAI PAGAL LABORATORINIO REIKALAVIMUS
-  // =====================================================================
+  // ============ PAPILDYMAI ============
+  camera.radius = 25;
 
-  camera.radius = 30;
-  camera.upperBetaLimit = 1.5;
+  // 1. PIVOT - lektuvas skrenda ratu aplink centra
+  var pivot = new BABYLON.TransformNode("pivot", scene);
+  plane.parent = pivot;
+  plane.position.x = 8;
+  plane.rotation.y = Math.PI;
 
-  // ---------- 1. PIVOT: lektuvas skrenda ratu aplink pivota ----------
-  var flightPivot = new BABYLON.TransformNode("flightPivot", scene);
-  plane.parent = flightPivot;     // lektuvas pririsamas prie pivoto
-  plane.position.x = 10;          // 10 vienetu nuo centro
-  plane.rotation.y = Math.PI;     // nosis i skrydzio krypti
-  plane.rotation.z = -0.25;       // pasviras posukyje
-  var flying = true;
-  var altitude = 0;
-
-  // ---------- 1. INSTANCE: lankai (instance + instancedBuffers spalva) ----------
-  var hoop = BABYLON.MeshBuilder.CreateTorus("hoop", { diameter: 4, thickness: 0.25, tessellation: 32 }, scene);
-  var hoopMat = new BABYLON.StandardMaterial("hoopMat", scene);
-  hoopMat.emissiveColor = new BABYLON.Color3(0.3, 0.3, 0.3);
-  hoop.material = hoopMat;
-  hoop.registerInstancedBuffer("color", 4);
-  hoop.instancedBuffers.color = new BABYLON.Color4(1, 0.8, 0.1, 1);
-  hoop.isVisible = false;         // pats saltinis nerodomas, rodomi tik instance
-  var hoops = [];
-  for (var i = 0; i < 6; i++) {
-    var a = i * Math.PI * 2 / 6 + 0.5;
-    var h = hoop.createInstance("hoop" + i);
-    h.position = new BABYLON.Vector3(10 * Math.cos(a), 2, -10 * Math.sin(a));
-    h.rotation = new BABYLON.Vector3(Math.PI / 2, a, 0);
-    h.instancedBuffers.color = new BABYLON.Color4(1, 0.8, 0.1, 1);
-    hoops.push(h);
-  }
-
-  // ---------- 1. INSTANCE: debesys ----------
-  var cloudParts = [];
-  [[0, 0, 0, 2], [1.4, -0.2, 0, 1.5], [-1.4, -0.3, 0.2, 1.4], [0.5, 0.6, 0.3, 1.3]].forEach(function (p) {
-    var s = BABYLON.MeshBuilder.CreateSphere("cloudPart", { diameter: p[3], segments: 12 }, scene);
-    s.position = new BABYLON.Vector3(p[0], p[1], p[2]);
-    cloudParts.push(s);
-  });
-  var cloud = BABYLON.Mesh.MergeMeshes(cloudParts, true);
-  cloud.name = "cloud";
+  // 1. INSTANCE - debesys
+  var cloud = BABYLON.MeshBuilder.CreateSphere("cloud", { diameter: 3 }, scene);
+  cloud.position = new BABYLON.Vector3(-10, 8, 10);
   var cloudMat = new BABYLON.StandardMaterial("cloudMat", scene);
-  cloudMat.diffuseColor = new BABYLON.Color3(1, 1, 1);
-  cloudMat.emissiveColor = new BABYLON.Color3(0.5, 0.5, 0.55);
+  cloudMat.emissiveColor = new BABYLON.Color3(0.9, 0.9, 0.9);
   cloud.material = cloudMat;
-  cloud.position = new BABYLON.Vector3(-15, 9, 12);
-  var clouds = [cloud];
-  for (var c = 1; c < 8; c++) {
-    var ci = cloud.createInstance("cloud" + c);
-    var ca = c * Math.PI * 2 / 7;
-    ci.position = new BABYLON.Vector3(22 * Math.cos(ca), 8 + Math.random() * 4, 8 + 18 * Math.sin(ca));
-    ci.scaling.setAll(0.8 + Math.random() * 1.2);
-    clouds.push(ci);
-  }
+  var cloud2 = cloud.createInstance("cloud2");
+  cloud2.position = new BABYLON.Vector3(0, 9, 15);
+  var cloud3 = cloud.createInstance("cloud3");
+  cloud3.position = new BABYLON.Vector3(10, 8, 10);
 
-  // ---------- 2. MESHAS IS BIBLIOTEKOS: kaiste (seagulf.glb) ant uolos ----------
-  var rock = BABYLON.MeshBuilder.CreateIcoSphere("rock", { radius: 1.5, subdivisions: 2 }, scene);
-  rock.position = new BABYLON.Vector3(-4, 0, 4);
-  rock.scaling.y = 0.6;
-  var rockMat = new BABYLON.StandardMaterial("rockMat", scene);
-  rockMat.diffuseColor = new BABYLON.Color3(0.35, 0.32, 0.3);
-  rock.material = rockMat;
-  var gull = null;
-  BABYLON.SceneLoader.ImportMeshAsync("", "https://assets.babylonjs.com/meshes/", "seagulf.glb", scene)
-    .then(function (res) {
-      gull = res.meshes[0];
-      gull.scaling.scaleInPlace(0.0012);
-      gull.position = new BABYLON.Vector3(-4, 0.8, 4);
-      res.meshes.forEach(function (m) { addToScene(m); });
+  // 2. MESHAS IS BIBLIOTEKOS - kaiste
+  BABYLON.SceneLoader.ImportMesh("", "https://assets.babylonjs.com/meshes/", "seagulf.glb", scene, function (meshes) {
+    meshes[0].scaling.scaleInPlace(0.0015);
+    meshes[0].position = new BABYLON.Vector3(-3, 0.8, 3);
+    meshes.forEach(function (m) {
+      shadowGen.addShadowCaster(m);
+      mirror.renderList.push(m);
     });
+  });
 
-  // ---------- 3. SESELIAI ----------
+  // 3. SESELIAI
   light.position = new BABYLON.Vector3(20, 40, 20);
-  var shadowGen = new BABYLON.ShadowGenerator(2048, light);
-  shadowGen.useBlurExponentialShadowMap = true;
-  shadowGen.blurKernel = 32;
+  var shadowGen = new BABYLON.ShadowGenerator(1024, light);
+  plane.getChildMeshes().forEach(function (m) { shadowGen.addShadowCaster(m); });
   water.receiveShadows = true;
 
-  // ---------- 3. VEIDRODINIS ATSPINDYS: vanduo ----------
+  // 3. VEIDRODINIS ATSPINDYS - vanduo
   var mirror = new BABYLON.MirrorTexture("mirror", 1024, scene, true);
   mirror.mirrorPlane = new BABYLON.Plane(0, -1, 0, 0);
   mirror.level = 0.6;
-  mirror.adaptiveBlurKernel = 16;  // vanduo atspindi ne idealiai
+  mirror.renderList = plane.getChildMeshes().concat([cloud, cloud2, cloud3]);
   blueMat.reflectionTexture = mirror;
-  var skybox = scene.getMeshByName("BackgroundSkybox");
-  if (skybox) mirror.renderList.push(skybox);
 
-  function addToScene(m) {
-    shadowGen.addShadowCaster(m);
-    mirror.renderList.push(m);
-  }
-  plane.getChildMeshes().forEach(addToScene);
-  hoops.forEach(addToScene);
-  clouds.forEach(addToScene);
-  addToScene(rock);
+  // 4. INTERACTIONS - lankas, pro kuri praskrenda lektuvas
+  var hoop = BABYLON.MeshBuilder.CreateTorus("hoop", { diameter: 4, thickness: 0.2 }, scene);
+  hoop.position = new BABYLON.Vector3(0, 2, -8);
+  hoop.rotation.x = Math.PI / 2;
+  hoop.rotation.y = Math.PI / 2;
+  var hoopMat = new BABYLON.StandardMaterial("hoopMat", scene);
+  hoopMat.diffuseColor = BABYLON.Color3.Yellow();
+  hoop.material = hoopMat;
 
-  // ---------- 5. DALELIU SISTEMA: dumai is duslintuvo ----------
-  var smoke = new BABYLON.ParticleSystem("smoke", 2000, scene);
-  smoke.particleTexture = new BABYLON.Texture("textures/cloud.png", scene);
-  smoke.emitter = exhaust;                       // emiteris - lektuvo duslintuvas
-  smoke.minEmitBox = new BABYLON.Vector3(-0.05, -0.05, 0);
-  smoke.maxEmitBox = new BABYLON.Vector3(0.05, 0.05, 0);
-  smoke.color1 = new BABYLON.Color4(0.8, 0.8, 0.8, 0.6);
-  smoke.color2 = new BABYLON.Color4(0.6, 0.6, 0.65, 0.5);
-  smoke.colorDead = new BABYLON.Color4(0.5, 0.5, 0.5, 0);
-  smoke.minSize = 0.3; smoke.maxSize = 0.8;
-  smoke.minScaleX = 1; smoke.maxScaleX = 1.5;
-  smoke.minLifeTime = 0.8; smoke.maxLifeTime = 1.6;
-  smoke.emitRate = 150;
-  smoke.direction1 = new BABYLON.Vector3(-0.2, 0.3, -1);
-  smoke.direction2 = new BABYLON.Vector3(0.2, 0.6, -1);
-  smoke.minEmitPower = 0.5; smoke.maxEmitPower = 1;
-  smoke.minAngularSpeed = -1; smoke.maxAngularSpeed = 1;
-  smoke.addSizeGradient(0, 0.3);
-  smoke.addSizeGradient(1, 1.5);
-  smoke.blendMode = BABYLON.ParticleSystem.BLENDMODE_STANDARD;
+  // 5. DALELIU SISTEMA - dumai is duslintuvo
+  var smoke = new BABYLON.ParticleSystem("smoke", 1000, scene);
+  smoke.particleTexture = new BABYLON.Texture("textures/flare.png", scene);
+  smoke.emitter = exhaust;
+  smoke.color1 = new BABYLON.Color4(0.8, 0.8, 0.8, 1);
+  smoke.color2 = new BABYLON.Color4(0.5, 0.5, 0.5, 1);
+  smoke.minSize = 0.2;
+  smoke.maxSize = 0.5;
+  smoke.minLifeTime = 0.5;
+  smoke.maxLifeTime = 1.5;
+  smoke.emitRate = 100;
+  smoke.direction1 = new BABYLON.Vector3(0, 0.5, -1);
+  smoke.direction2 = new BABYLON.Vector3(0, 1, -1);
   smoke.start();
 
-  // ---------- 5. DALELIU SISTEMA: fejerverkas praskridus lanka ----------
-  var burst = new BABYLON.ParticleSystem("burst", 1500, scene);
-  burst.particleTexture = new BABYLON.Texture("textures/flare.png", scene);
-  burst.emitter = new BABYLON.Vector3(0, 0, 0);
-  burst.createSphereEmitter(1);
-  burst.color1 = new BABYLON.Color4(1, 0.9, 0.2, 1);
-  burst.color2 = new BABYLON.Color4(1, 0.3, 0.6, 1);
-  burst.colorDead = new BABYLON.Color4(0, 0, 0, 0);
-  burst.minSize = 0.2; burst.maxSize = 0.6;
-  burst.minLifeTime = 0.5; burst.maxLifeTime = 1.2;
-  burst.minEmitPower = 5; burst.maxEmitPower = 10;
-  burst.gravity = new BABYLON.Vector3(0, -5, 0);
-  burst.emitRate = 0;
-  burst.blendMode = BABYLON.ParticleSystem.BLENDMODE_ONEONE;
-  burst.start();
-  function fireworks(pos) {
-    burst.emitter = pos.clone();
-    burst.manualEmitCount = 400;
-  }
-
-  // ---------- 7. SAVAS PAVYZDYS: Trail Mesh + Lens Flare ----------
-  // Trail Mesh - balti pedsakai is sparnu galu
+  // 7. SAVAS PAVYZDYS - Trail Mesh (pedsakas uz lektuvo)
+  var trail = new BABYLON.TrailMesh("trail", wings, scene, 0.2, 60, true);
   var trailMat = new BABYLON.StandardMaterial("trailMat", scene);
-  trailMat.emissiveColor = new BABYLON.Color3(1, 1, 1);
-  trailMat.diffuseColor = BABYLON.Color3.Black();
-  trailMat.alpha = 0.45;
-  trailMat.backFaceCulling = false;
-  [-3.5, 3.5].forEach(function (x) {
-    var tip = new BABYLON.TransformNode("wingTip", scene);
-    tip.parent = plane;
-    tip.position = new BABYLON.Vector3(x, 0, -0.2);
-    var trail = new BABYLON.TrailMesh("trail", tip, scene, 0.08, 120, true);
-    trail.material = trailMat;
-  });
+  trailMat.emissiveColor = BABYLON.Color3.White();
+  trailMat.alpha = 0.5;
+  trail.material = trailMat;
 
-  // Lens Flare - saule su objektyvo atspindziais
-  var sun = BABYLON.MeshBuilder.CreateSphere("sun", { diameter: 4 }, scene);
-  sun.position = light.direction.scale(-45);
-  var sunMat = new BABYLON.StandardMaterial("sunMat", scene);
-  sunMat.emissiveColor = new BABYLON.Color3(1, 0.95, 0.7);
-  sunMat.disableLighting = true;
-  sun.material = sunMat;
-  var flares = new BABYLON.LensFlareSystem("flares", sun, scene);
-  new BABYLON.LensFlare(0.3, 0, new BABYLON.Color3(1, 1, 1), "textures/flare.png", flares);
-  new BABYLON.LensFlare(0.1, 0.4, new BABYLON.Color3(0.6, 0.8, 1), "textures/Flare2.png", flares);
-  new BABYLON.LensFlare(0.08, 0.7, new BABYLON.Color3(1, 0.7, 0.4), "textures/flare3.png", flares);
-  new BABYLON.LensFlare(0.15, 1.0, new BABYLON.Color3(0.7, 1, 0.7), "textures/flare3.png", flares);
-  new BABYLON.LensFlare(0.05, -0.3, new BABYLON.Color3(1, 1, 1), "textures/Flare2.png", flares);
-
-  // ---------- 6. IVYKIU TVARKYKLE: GUI ----------
-  var score = 0;
-  var ui = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
-  var info = new BABYLON.GUI.TextBlock("info", "");
-  info.color = "white"; info.fontSize = 16;
-  info.outlineWidth = 3; info.outlineColor = "black";
-  info.textHorizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
-  info.textVerticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
-  info.paddingLeft = "12px"; info.paddingTop = "12px";
-  ui.addControl(info);
-  function updateInfo() {
-    info.text = "Lankai: " + score +
-      "\nW/S - aukstis, Space - stop/skristi, F - fejerverkas" +
-      "\nPaspausk lektuva - kilpa";
-  }
-  updateInfo();
-
-  var soundBtn = BABYLON.GUI.Button.CreateSimpleButton("soundBtn", "Garsas: ON");
-  soundBtn.width = "140px"; soundBtn.height = "40px";
-  soundBtn.color = "white"; soundBtn.background = "#1b4d6e";
-  soundBtn.top = "-12px"; soundBtn.left = "-12px";
-  soundBtn.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_RIGHT;
-  soundBtn.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
-  ui.addControl(soundBtn);
-  soundBtn.onPointerUpObservable.add(function () {
-    if (sound.isPlaying) { sound.pause(); soundBtn.textBlock.text = "Garsas: OFF"; }
-    else { sound.play(); soundBtn.textBlock.text = "Garsas: ON"; }
-  });
-
-  // ---------- 6. IVYKIU TVARKYKLE: klaviatura ----------
-  var keys = {};
+  // 6. IVYKIU TVARKYKLE - Space sustabdo / paleidzia lektuva
+  var flying = true;
   scene.onKeyboardObservable.add(function (kb) {
-    var k = kb.event.key.toLowerCase();
-    if (kb.type === BABYLON.KeyboardEventTypes.KEYDOWN) {
-      keys[k] = true;
-      if (k === " ") flying = !flying;
-      if (k === "f") fireworks(plane.getAbsolutePosition().add(new BABYLON.Vector3(0, 3, 0)));
-    } else if (kb.type === BABYLON.KeyboardEventTypes.KEYUP) {
-      keys[k] = false;
+    if (kb.type === BABYLON.KeyboardEventTypes.KEYDOWN && kb.event.key === " ") {
+      flying = !flying;
     }
   });
 
-  // ---------- 6. IVYKIU TVARKYKLE: ActionManager (pele ant lektuvo) ----------
-  var looping = false;
-  plane.getChildMeshes().forEach(function (m) {
-    m.actionManager = new BABYLON.ActionManager(scene);
-    m.actionManager.registerAction(new BABYLON.SetValueAction(
-      BABYLON.ActionManager.OnPointerOverTrigger, redMat, "emissiveColor", new BABYLON.Color3(0.4, 0, 0)));
-    m.actionManager.registerAction(new BABYLON.SetValueAction(
-      BABYLON.ActionManager.OnPointerOutTrigger, redMat, "emissiveColor", BABYLON.Color3.Black()));
-    m.actionManager.registerAction(new BABYLON.ExecuteCodeAction(
-      BABYLON.ActionManager.OnPickTrigger, function () {
-        if (looping) return;
-        looping = true;
-        var ease = new BABYLON.CubicEase();
-        ease.setEasingMode(BABYLON.EasingFunction.EASINGMODE_EASEINOUT);
-        BABYLON.Animation.CreateAndStartAnimation("barrelRoll", plane, "rotation.z", 30, 45,
-          plane.rotation.z, plane.rotation.z + Math.PI * 2,
-          BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT, ease, function () {
-            plane.rotation.z = -0.25;
-            looping = false;
-          });
-      }));
-  });
-
-  // ---------- 4. MESH INTERACTIONS + kadro logika ----------
   scene.onBeforeRenderObservable.add(function () {
-    var dt = engine.getDeltaTime() / 1000;
+    if (flying) pivot.rotation.y += 0.01;
 
-    if (flying) flightPivot.rotation.y += dt * 0.5;   // pivoto sukimas = skrydis ratu
-    if (gull) gull.rotate(BABYLON.Vector3.Up(), dt * 0.3);          // kaiste dairosi aplink
-    clouds.forEach(function (c) { c.position.x += dt * 0.5; if (c.position.x > 30) c.position.x = -30; });
-
-    if (keys["w"]) altitude = Math.min(altitude + dt * 3, 8);
-    if (keys["s"]) altitude = Math.max(altitude - dt * 3, -1);
-    flightPivot.position.y = altitude;
-
-    smoke.emitRate = flying ? 150 : 20;
-
-    // intersectsMesh: lektuvo korpusas praskrenda pro lanka
-    hoops.forEach(function (h) {
-      if (fuselage.intersectsMesh(h, false)) {
-        if (!h.passed) {
-          h.passed = true;
-          score++;
-          updateInfo();
-          h.instancedBuffers.color = new BABYLON.Color4(0.2, 1, 0.3, 1);
-          fireworks(h.getAbsolutePosition());
-        }
-      } else if (h.passed && BABYLON.Vector3.Distance(fuselage.getAbsolutePosition(), h.position) > 6) {
-        h.passed = false;
-        h.instancedBuffers.color = new BABYLON.Color4(1, 0.8, 0.1, 1);
-      }
-    });
-
-    // intersectsMesh: lektuvas kliudo debesi - debesis susiploja
-    clouds.forEach(function (c) {
-      c.scaling.y += ((wings.intersectsMesh(c, false) ? 0.6 : 1) * c.scaling.x - c.scaling.y) * 0.1;
-    });
+    // 4. jei lektuvas liecia lanka - lankas pazaliuoja
+    if (fuselage.intersectsMesh(hoop, false)) {
+      hoopMat.diffuseColor = BABYLON.Color3.Green();
+    } else {
+      hoopMat.diffuseColor = BABYLON.Color3.Yellow();
+    }
   });
   // ANIMATION
   var time = 0;
