@@ -1,7 +1,7 @@
 package lt.vilniustech.fotokelione // paketas – „aplankas“, kuriam priklauso šis failas
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
@@ -18,7 +18,7 @@ import lt.vilniustech.fotokelione.ui.theme.FotoKelioneTheme
  * AndroidManifest.xml faile ši klasė nurodyta kaip LAUNCHER –
  * todėl ji atsidaro paspaudus programėlės ikoną.
  */
-class MainActivity : ComponentActivity() { // ComponentActivity – Android ekranas, palaikantis Compose
+class MainActivity : AppCompatActivity() { // AppCompatActivity – Android ekranas (palaiko Compose ir kalbos perjungimą)
 
     // calculateWindowSizeClass dar pažymėta kaip „eksperimentinė“, todėl reikia @OptIn
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)

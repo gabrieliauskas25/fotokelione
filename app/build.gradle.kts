@@ -12,8 +12,8 @@ android {
         applicationId = "lt.vilniustech.fotokelione"
         minSdk = 24
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2       // didinamas kiekvieną kartą įkeliant naują versiją į Google Play
+        versionName = "2.0"
     }
 
     buildTypes {
@@ -38,6 +38,8 @@ dependencies {
     implementation(composeBom)
 
     implementation("androidx.core:core-ktx:1.15.0")
+    implementation("androidx.appcompat:appcompat:1.7.0")    // kalbos perjungimas (AppCompatDelegate)
+    implementation("io.coil-kt:coil-compose:2.7.0")        // portfolio nuotraukos iš interneto
     implementation("androidx.activity:activity-compose:1.9.3")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")

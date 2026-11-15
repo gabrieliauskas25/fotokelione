@@ -53,6 +53,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import lt.vilniustech.fotokelione.NAME_MAX_LENGTH
+import lt.vilniustech.fotokelione.R
 import lt.vilniustech.fotokelione.GearInputErrors
 import lt.vilniustech.fotokelione.GearItem
 import lt.vilniustech.fotokelione.PlannerViewModel
@@ -118,7 +121,7 @@ fun GearScreen(viewModel: PlannerViewModel) {
         ExtendedFloatingActionButton(
             onClick = { showAddDialog = true }, // atidaro dialogą
             icon = { Icon(Icons.Filled.Add, contentDescription = null) },
-            text = { Text("Naujas daiktas") },
+            text = { Text(stringResource(R.string.new_item)) },
             modifier = Modifier
                 .align(Alignment.BottomEnd) // Box viduje – į apatinį dešinį kampą
                 .padding(16.dp),
@@ -152,6 +155,7 @@ private fun WeightSummary(
     onLimitChange: (Float) -> Unit,
 ) {
     val colors = MaterialTheme.colorScheme // temos spalvos (Theme.kt)
+    val limitDescription = stringResource(R.string.luggage_limit_cd)
     // Viršijus limitą kortelės gradientas tampa raudonas–oranžinis
     HeroCard(
         startColor = if (overLimit) colors.error else colors.primary,
@@ -160,9 +164,9 @@ private fun WeightSummary(
         // Row – elementai išdėstomi eilute (iš kairės į dešinę)
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) { // tekstai kairėje, užima visą likusią vietą
-                Text("Supakuota", style = MaterialTheme.typography.labelLarge, color = Color.White.copy(alpha = 0.85f))
+                Text(stringResource(R.string.packed), style = MaterialTheme.typography.labelLarge, color = Color.White.copy(alpha = 0.85f))
                 Text(formatKg(weightKg), style = MaterialTheme.typography.headlineMedium) // pvz. „2,1 kg“
-                Text("iš ${formatKg(limitKg.toDouble())} · $packedCount/$totalCount daiktų", style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.of_limit_items, formatKg(limitKg.toDouble()), packedCount, totalCount), style = MaterialTheme.typography.bodyMedium)
             }
             // Lagamino ikona dešinėje
             IconCircle(
@@ -191,7 +195,7 @@ private fun WeightSummary(
 
         // SLANKIKLIS: bagažo limitas nuo 5 iki 30 kg kas 1 kg
         // ${...} – įterpia kintamojo reikšmę į tekstą; roundToInt: 8.0 → 8
-        Text("Bagažo limitas: ${limitKg.roundToInt()} kg", style = MaterialTheme.typography.labelLarge)
+        Text(stringResource(R.string.luggage_limit, limitKg.roundToInt()), style = MaterialTheme.typography.labelLarge)
         Slider(
             value = limitKg, // kur stovi rutuliukas (reikšmė ateina iš ViewModel)
             // pajudinus: it = nauja reikšmė → suapvaliname iki sveikų kg → perduodame į viršų
@@ -206,7 +210,7 @@ private fun WeightSummary(
                 inactiveTickColor = Color.Transparent,
             ),
             // PRIEINAMUMAS: TalkBack perskaitys, kam skirtas slankiklis
-            modifier = Modifier.semantics { contentDescription = "Bagažo limitas kilogramais" },
+            modifier = Modifier.semantics { contentDescription = limitDescription },
         )
 
         // ĮSPĖJIMAS: atsiranda su animacija tik viršijus limitą
@@ -215,10 +219,10 @@ private fun WeightSummary(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(top = 4.dp),
             ) {
-                Icon(Icons.Filled.Warning, contentDescription = "Įspėjimas")
+                Icon(Icons.Filled.Warning, contentDescription = stringResource(R.string.warning))
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    "Limitas viršytas ${formatKg(weightKg - limitKg)}!",
+                    stringResource(R.string.over_limit, formatKg(weightKg - limitKg)),
                     style = MaterialTheme.typography.titleMedium,
                 )
             }
@@ -230,6 +234,7 @@ private fun WeightSummary(
 @Composable
 private fun GearCard(item: GearItem, onToggle: () -> Unit, onDelete: () -> Unit) {
     val colors = MaterialTheme.colorScheme
+    val packedDescription = stringResource(R.string.packed_cd, item.name)
     // KORTELĖ: paspaudus bet kur – pažymima supakuota / nesupakuota
     Card(
         onClick = onToggle,
@@ -248,7 +253,7 @@ private fun GearCard(item: GearItem, onToggle: () -> Unit, onDelete: () -> Unit)
                 checked = item.packed,
                 onCheckedChange = { onToggle() },
                 // PRIEINAMUMAS: TalkBack pasakys, kokio daikto varnelė
-                modifier = Modifier.semantics { contentDescription = "Supakuota: ${item.name}" },
+                modifier = Modifier.semantics { contentDescription = packedDescription },
             )
             // Ikona: kuprinė (supakuota) arba dėžė (dar ne)
             Icon(
@@ -271,7 +276,7 @@ private fun GearCard(item: GearItem, onToggle: () -> Unit, onDelete: () -> Unit)
             )
             // Šalinimo mygtukas ✕
             IconButton(onClick = onDelete) {
-                Icon(Icons.Filled.Close, contentDescription = "Šalinti „${item.name}“") // PRIEINAMUMAS
+                Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.delete_item_cd, item.name)) // PRIEINAMUMAS
             }
         }
     }
@@ -288,30 +293,30 @@ private fun AddGearDialog(onDismiss: () -> Unit, onAdd: (String, String) -> Gear
     AlertDialog(
         onDismissRequest = onDismiss,
         icon = { Icon(Icons.Filled.Backpack, contentDescription = null) },
-        title = { Text("Naujas daiktas") },
+        title = { Text(stringResource(R.string.new_item)) },
         text = {
             Column {
                 // TEKSTINIS LAUKAS: pavadinimas
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it }, // įvedus raidę – atnaujiname būseną
-                    label = { Text("Pavadinimas") },
+                    label = { Text(stringResource(R.string.name)) },
                     singleLine = true,
                     isError = errors?.name != null, // ?. – jei errors null, rezultatas irgi null
-                    supportingText = errors?.name?.let { { Text(it.message) } }, // klaidos tekstas
+                    supportingText = errors?.name?.let { error -> { Text(stringResource(error.message, NAME_MAX_LENGTH)) } }, // klaidos tekstas
                     modifier = Modifier.fillMaxWidth(),
                 )
                 // TEKSTINIS LAUKAS: svoris (priima ir kablelį, ir tašką – parseAmount)
                 OutlinedTextField(
                     value = weight,
                     onValueChange = { weight = it },
-                    label = { Text("Svoris, kg") },
-                    placeholder = { Text("pvz. 0,8") },
+                    label = { Text(stringResource(R.string.weight_kg)) },
+                    placeholder = { Text(stringResource(R.string.weight_hint)) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), // skaičių klaviatūra
                     isError = errors?.weightInvalid == true,
                     supportingText = if (errors?.weightInvalid == true) {
-                        { Text("Įveskite teigiamą skaičių") }
+                        { Text(stringResource(R.string.weight_error)) }
                     } else {
                         null
                     },
@@ -321,10 +326,10 @@ private fun AddGearDialog(onDismiss: () -> Unit, onAdd: (String, String) -> Gear
         },
         confirmButton = {
             // „Pridėti“: bandome pridėti ir įsimename klaidas (jei yra – laukai taps raudoni)
-            TextButton(onClick = { errors = onAdd(name, weight) }) { Text("Pridėti") }
+            TextButton(onClick = { errors = onAdd(name, weight) }) { Text(stringResource(R.string.add)) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Atšaukti") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
         },
     )
 }

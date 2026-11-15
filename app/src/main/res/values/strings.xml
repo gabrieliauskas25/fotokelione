@@ -1,3 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    LIETUVIŠKI TEKSTAI (numatytoji kalba).
+    Angliški tekstai – faile values-en/strings.xml su TAIS PAČIAIS pavadinimais (name).
+    Kode tekstas gaunamas taip: stringResource(R.string.pavadinimas)
+-->
 <resources>
     <string name="app_name">FotoKelionė</string>
+
+    <!-- Viršutinė juosta ir meniu -->
+    <string name="more_options">Daugiau parinkčių</string>
+    <string name="menu_author">Autorius</string>
+    <string name="menu_language">Kalba: English</string>
+    <string name="author_group">Grupė: %1$s</string>
+    <string name="close">Uždaryti</string>
+
+    <!-- Navigacija -->
+    <string name="nav_plan">Planas</string>
+    <string name="nav_gear">Įranga</string>
+    <string name="nav_budget">Biudžetas</string>
+    <string name="nav_card">Kortelė</string>
+    <string name="badge_remaining">%1$s: liko %2$d</string>
+
+    <!-- Bendri -->
+    <string name="add">Pridėti</string>
+    <string name="cancel">Atšaukti</string>
+    <string name="delete">Šalinti</string>
+    <string name="name">Pavadinimas</string>
+
+    <!-- Planas -->
+    <string name="plan_empty">Šiame sąraše vietų nėra</string>
+    <string name="place_removed">„%1$s“ pašalinta</string>
+    <string name="undo">Atšaukti</string>
+    <string name="new_place">Nauja vieta</string>
+    <string name="trip_progress">Kelionės progresas</string>
+    <string name="photographed_of">Nufotografuota %1$d iš %2$d</string>
+    <string name="progress_cd">Progresas %1$d procentų</string>
+    <string name="collapse">Suskleisti</string>
+    <string name="expand">Išskleisti</string>
+    <string name="mark_done_cd">Pažymėti „%1$s“ kaip nufotografuotą</string>
+    <string name="outdoor">Lauke</string>
+    <string name="indoor">Patalpoje</string>
+    <string name="outdoor_cd">Fotografuojama lauke</string>
+    <string name="priority">Prioritetas</string>
+    <string name="priority_value">Prioritetas: %1$d</string>
+    <string name="priority_cd">Prioritetas %1$d iš 5</string>
+    <string name="category">Kategorija</string>
+    <string name="time_of_day">Paros metas</string>
+
+    <string name="cat_nature">Gamta</string>
+    <string name="cat_city">Miestas</string>
+    <string name="cat_architecture">Architektūra</string>
+    <string name="cat_portrait">Portretai</string>
+    <string name="cat_night_sky">Naktinis dangus</string>
+
+    <string name="time_sunrise">Saulėtekis</string>
+    <string name="time_day">Diena</string>
+    <string name="time_sunset">Saulėlydis</string>
+    <string name="time_night">Naktis</string>
+
+    <string name="filter_all">Visi</string>
+    <string name="filter_pending">Laukia</string>
+    <string name="filter_done">Atlikta</string>
+
+    <string name="error_name_empty">Įveskite pavadinimą</string>
+    <string name="error_name_too_long">Pavadinimas per ilgas (daugiausia %1$d simbolių)</string>
+
+    <!-- Įranga -->
+    <string name="new_item">Naujas daiktas</string>
+    <string name="packed">Supakuota</string>
+    <string name="of_limit_items">iš %1$s · %2$d/%3$d daiktų</string>
+    <string name="luggage_limit">Bagažo limitas: %1$d kg</string>
+    <string name="luggage_limit_cd">Bagažo limitas kilogramais</string>
+    <string name="warning">Įspėjimas</string>
+    <string name="over_limit">Limitas viršytas %1$s!</string>
+    <string name="packed_cd">Supakuota: %1$s</string>
+    <string name="delete_item_cd">Šalinti „%1$s“</string>
+    <string name="weight_kg">Svoris, kg</string>
+    <string name="weight_hint">pvz. 0,8</string>
+    <string name="weight_error">Įveskite teigiamą skaičių</string>
+
+    <!-- Biudžetas -->
+    <string name="section_trip">Kelionė</string>
+    <string name="nights">Naktų skaičius</string>
+    <string name="nights_error">Įveskite sveiką neneigiamą skaičių</string>
+    <string name="flight_price">Skrydžio kaina, €</string>
+    <string name="section_expenses">Išlaidos</string>
+    <string name="hotel_per_night">Viešbutis už naktį, €</string>
+    <string name="daily_expenses">Dienos išlaidos, €</string>
+    <string name="section_transport">Transportas</string>
+    <string name="add_reserve" formatted="false">Pridėti 10 % rezervą</string>
+    <string name="calculate">Skaičiuoti</string>
+    <string name="amount_error">Įveskite neneigiamą skaičių (pvz., 12,50)</string>
+    <string name="per_day_price">%1$s / d.</string>
+    <string name="total">Iš viso</string>
+    <string name="subtotal">Tarpinė suma</string>
+    <string name="reserve" formatted="false">Rezervas (10 %)</string>
+    <string name="average_per_day">Vidutiniškai per dieną</string>
+
+    <string name="transport_public">Viešasis transportas</string>
+    <string name="transport_car">Automobilio nuoma</string>
+    <string name="transport_walk">Pėsčiomis</string>
+
+    <!-- Vizitinė kortelė -->
+    <string name="card_role">Fotografas · multimedijos studentas</string>
+    <string name="my_photo">Mano nuotrauka</string>
+    <string name="take_photo">Nufotografuoti save</string>
+    <string name="no_camera_app">Nerasta kameros programėlė</string>
+    <string name="no_email_app">Nerasta el. pašto programėlė</string>
+    <string name="show_cv">CV</string>
+    <string name="show_portfolio">Portfolio</string>
+    <string name="show_contact">Susisiekti</string>
+    <string name="choose_section">Paspauskite mygtuką viršuje, kad pamatytumėte CV, portfolio arba susisiektumėte su manimi.</string>
+
+    <string name="cv_title">Gyvenimo aprašymas (CV)</string>
+    <string name="new_cv_entry">Naujas CV įrašas</string>
+    <string name="cv_entry">Įrašas</string>
+    <string name="cv_entry_hint">pvz. 2025 – fotografijos kursai</string>
+    <string name="error_empty">Laukas negali būti tuščias</string>
+
+    <string name="portfolio_title">Portfolio</string>
+    <string name="new_portfolio_item">Naujas darbas</string>
+    <string name="image_url">Nuotraukos adresas (URL)</string>
+    <string name="error_url">Adresas turi prasidėti http:// arba https://</string>
+    <string name="retry">Bandyti dar kartą</string>
+    <string name="image_failed">Nepavyko užkrauti nuotraukos</string>
+
+    <string name="contact_title">Susisiekite su manimi</string>
+    <string name="your_name">Jūsų vardas</string>
+    <string name="your_email">Jūsų el. paštas</string>
+    <string name="your_question">Klausimas</string>
+    <string name="error_email">Įveskite teisingą el. pašto adresą</string>
+    <string name="send">Siųsti</string>
+    <string name="email_subject">Klausimas iš FotoKelionė programėlės</string>
+    <string name="email_body">Vardas: %1$s\nEl. paštas: %2$s\n\n%3$s</string>
+
+    <!-- Numatytieji CV įrašai -->
+    <string-array name="cv_items">
+        <item>2023 – dabar: VILNIUS TECH, Multimedijos ir kompiuterinio dizaino studijos</item>
+        <item>Įgūdžiai: fotografija, Adobe Lightroom, Photoshop, Kotlin, Jetpack Compose</item>
+        <item>Kalbos: lietuvių (gimtoji), anglų (B2)</item>
+    </string-array>
+
+    <!-- Numatytųjų portfolio darbų pavadinimai (adresai – CardViewModel.kt) -->
+    <string-array name="portfolio_titles">
+        <item>Upė kalnuose</item>
+        <item>Kalnų viršūnės</item>
+        <item>Naktinis miestas</item>
+    </string-array>
 </resources>

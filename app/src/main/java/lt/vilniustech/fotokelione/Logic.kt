@@ -1,5 +1,6 @@
 package lt.vilniustech.fotokelione
 
+import androidx.annotation.StringRes
 import java.util.Locale
 
 /*
@@ -20,6 +21,7 @@ import java.util.Locale
  *   5. Skaičiavimai: safeDivide, filterPlaces, placeProgress, packedWeight ...
  *   6. Biudžeto formulė: calculateBudget
  *   7. Formatavimas: formatEuro, formatKg
+ *   8. Vizitinė kortelė: el. pašto ir nuorodos tikrinimas, kontakto forma
  * ============================================================================
  */
 
@@ -35,39 +37,40 @@ const val RESERVE_RATE = 0.10
 
 // ---------------------------------------------------------------------------
 // 2. PASIRINKIMŲ SĄRAŠAI (enum)
-//    enum – tai fiksuotas reikšmių sąrašas. Kiekviena reikšmė turi lietuvišką
-//    pavadinimą `label`, kurį rodome ekrane.
+//    enum – tai fiksuotas reikšmių sąrašas. Kiekviena reikšmė turi `label` –
+//    tai NE pats tekstas, o nuoroda į tekstą faile strings.xml (R.string....).
+//    Taip tas pats enum ekrane rodomas lietuviškai arba angliškai.
 // ---------------------------------------------------------------------------
 
 /** Vietos kategorija (rodoma išskleidžiamame sąraše). */
-enum class Category(val label: String) {
-    NATURE("Gamta"),
-    CITY("Miestas"),
-    ARCHITECTURE("Architektūra"),
-    PORTRAIT("Portretai"),
-    NIGHT_SKY("Naktinis dangus"),
+enum class Category(@StringRes val label: Int) {
+    NATURE(R.string.cat_nature),
+    CITY(R.string.cat_city),
+    ARCHITECTURE(R.string.cat_architecture),
+    PORTRAIT(R.string.cat_portrait),
+    NIGHT_SKY(R.string.cat_night_sky),
 }
 
 /** Paros metas fotografavimui (rodomas radijo mygtukais). */
-enum class TimeOfDay(val label: String) {
-    SUNRISE("Saulėtekis"),
-    DAY("Diena"),
-    SUNSET("Saulėlydis"),
-    NIGHT("Naktis"),
+enum class TimeOfDay(@StringRes val label: Int) {
+    SUNRISE(R.string.time_sunrise),
+    DAY(R.string.time_day),
+    SUNSET(R.string.time_sunset),
+    NIGHT(R.string.time_night),
 }
 
 /** Filtras plano ekrane (rodomas filtro žymomis – FilterChip). */
-enum class PlaceFilter(val label: String) {
-    ALL("Visi"),
-    PENDING("Laukia"),
-    DONE("Atlikta"),
+enum class PlaceFilter(@StringRes val label: Int) {
+    ALL(R.string.filter_all),
+    PENDING(R.string.filter_pending),
+    DONE(R.string.filter_done),
 }
 
 /** Transporto būdas ir jo kaina per dieną eurais. */
-enum class Transport(val label: String, val costPerDay: Double) {
-    PUBLIC("Viešasis transportas", 8.0),
-    CAR("Automobilio nuoma", 45.0),
-    WALK("Pėsčiomis", 0.0),
+enum class Transport(@StringRes val label: Int, val costPerDay: Double) {
+    PUBLIC(R.string.transport_public, 8.0),
+    CAR(R.string.transport_car, 45.0),
+    WALK(R.string.transport_walk, 0.0),
 }
 
 // ---------------------------------------------------------------------------
@@ -99,10 +102,10 @@ data class GearItem(
 // 4. ĮVESTIES TIKRINIMAS
 // ---------------------------------------------------------------------------
 
-/** Galimos pavadinimo klaidos ir jų tekstas vartotojui. */
-enum class NameError(val message: String) {
-    EMPTY("Įveskite pavadinimą"),
-    TOO_LONG("Pavadinimas per ilgas (daugiausia $NAME_MAX_LENGTH simbolių)"),
+/** Galimos pavadinimo klaidos ir jų tekstas vartotojui (strings.xml). */
+enum class NameError(@StringRes val message: Int) {
+    EMPTY(R.string.error_name_empty),
+    TOO_LONG(R.string.error_name_too_long),
 }
 
 /**
@@ -219,3 +222,29 @@ fun formatEuro(value: Double): String = String.format(Locale.ROOT, "%.2f €", v
 
 /** 1.6 → "1,6 kg" */
 fun formatKg(value: Double): String = String.format(Locale.ROOT, "%.1f kg", value).replace('.', ',')
+
+// ---------------------------------------------------------------------------
+// 8. VIZITINĖ KORTELĖ (2 etapas)
+// ---------------------------------------------------------------------------
+
+/** Ar tekstas panašus į el. pašto adresą: kažkas@kažkas.lt */
+fun isValidEmail(email: String): Boolean =
+    Regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$").matches(email.trim())
+
+/** Ar nuoroda prasideda http:// arba https:// (portfolio nuotraukai). */
+fun isValidUrl(url: String): Boolean {
+    val trimmed = url.trim()
+    return trimmed.startsWith("http://") || trimmed.startsWith("https://")
+}
+
+/** Kontakto formos klaidos: true – tas laukas neteisingas. */
+data class ContactErrors(val name: Boolean, val email: Boolean, val question: Boolean) {
+    val isValid: Boolean get() = !name && !email && !question
+}
+
+/** Patikrina kontakto formą: vardas ir klausimas netušti, el. paštas teisingas. */
+fun validateContact(name: String, email: String, question: String) = ContactErrors(
+    name = name.isBlank(),
+    email = !isValidEmail(email),
+    question = question.isBlank(),
+)
