@@ -412,7 +412,10 @@ private fun PortfolioCard(item: PortfolioItem) {
     var attempt by remember { mutableIntStateOf(0) }  // keičiant šį skaičių nuotrauka kraunama iš naujo
     var failed by remember { mutableStateOf(false) }  // ar paskutinis bandymas nepavyko
 
-    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+    ) {
         Box {
             // key(attempt) – pasikeitus attempt, AsyncImage sukuriamas iš naujo ir siunčia vėl
             key(attempt) {

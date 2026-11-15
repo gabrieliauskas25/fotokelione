@@ -3,6 +3,7 @@ package lt.vilniustech.fotokelione // paketas – „aplankas“, kuriam priklau
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
+import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
@@ -24,7 +25,8 @@ class MainActivity : AppCompatActivity() { // AppCompatActivity – Android ekra
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) { // onCreate – kviečiama, kai ekranas sukuriamas
         super.onCreate(savedInstanceState) // būtinai iškviečiame tėvinės klasės onCreate
-        enableEdgeToEdge() // programėlė užima visą ekraną (ir po laikrodžio / baterijos juosta)
+        // programėlė užima visą ekraną; laikrodis ir baterija – balti (ant spalvotos viršutinės juostos)
+        enableEdgeToEdge(statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT))
         setContent { // viskas šių skliaustų viduje – Compose UI
             FotoKelioneTheme { // mūsų tema (spalvos, šriftai) – žr. ui/theme/Theme.kt
                 // Paleidžiame visą programėlę ir perduodame ekrano dydžio klasę

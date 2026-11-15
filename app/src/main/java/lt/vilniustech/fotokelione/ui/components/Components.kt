@@ -35,6 +35,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import lt.vilniustech.fotokelione.Category
 import lt.vilniustech.fotokelione.TimeOfDay
 
@@ -65,15 +68,24 @@ fun HeroCard(
     endColor: Color = MaterialTheme.colorScheme.tertiary,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    val shape = MaterialTheme.shapes.large
     Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
+        modifier = modifier
+            .fillMaxWidth()
+            // spalvotas šešėlis po kortele – suteikia gylio
+            .shadow(elevation = 12.dp, shape = shape, spotColor = startColor, ambientColor = startColor),
+        shape = shape,
         colors = CardDefaults.cardColors(containerColor = Color.Transparent, contentColor = Color.White),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(Brush.linearGradient(listOf(startColor, endColor)))
+                // dekoratyvūs permatomi apskritimai fone (piešiami už turinio)
+                .drawBehind {
+                    drawCircle(Color.White.copy(alpha = 0.10f), radius = size.height * 0.55f, center = Offset(size.width * 0.95f, 0f))
+                    drawCircle(Color.White.copy(alpha = 0.07f), radius = size.height * 0.35f, center = Offset(size.width * 0.75f, size.height))
+                }
                 .padding(20.dp),
             content = content,
         )
@@ -91,11 +103,18 @@ fun SectionCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp), // nedidelis šešėlis
     ) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                Spacer(Modifier.width(8.dp))
+                // ikona spalvotame apskritime
+                IconCircle(
+                    icon = icon,
+                    background = MaterialTheme.colorScheme.primaryContainer,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    size = 36.dp,
+                )
+                Spacer(Modifier.width(12.dp))
                 Text(title, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(Modifier.height(12.dp))

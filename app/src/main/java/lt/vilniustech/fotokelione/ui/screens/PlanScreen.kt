@@ -280,6 +280,8 @@ private fun PlaceCard(place: Place, onToggleDone: () -> Unit, onDelete: () -> Un
             // atlikta vieta – šiek tiek tamsesnis fonas
             containerColor = if (place.done) colors.surfaceContainerHigh else colors.surfaceContainerLow,
         ),
+        // šešėlis tik nebaigtoms vietoms – atliktos atrodo „įspaustos“
+        elevation = CardDefaults.cardElevation(defaultElevation = if (place.done) 0.dp else 3.dp),
         modifier = Modifier
             .fillMaxWidth()
             .animateContentSize(), // ANIMACIJA: sklandus dydžio pokytis

@@ -56,6 +56,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
@@ -167,18 +174,28 @@ fun FotoKelioneApp(
     Scaffold(
         // ---------- TOP APP BAR ----------
         topBar = {
+            // Juosta su spalvotu gradientu ir užapvalintais apatiniais kampais
+            val colors = MaterialTheme.colorScheme
             TopAppBar(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            Icons.Filled.PhotoCamera,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(stringResource(R.string.app_name))
+                        Icon(Icons.Filled.PhotoCamera, contentDescription = null)
+                        Spacer(Modifier.width(10.dp))
+                        Text(stringResource(R.string.app_name), fontWeight = FontWeight.Bold)
                     }
                 },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent, // fonas – gradientas žemiau (modifier)
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White,
+                    actionIconContentColor = Color.White,
+                ),
+                modifier = Modifier
+                    .shadow(8.dp, RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
+                    .background(
+                        Brush.horizontalGradient(listOf(colors.primary, colors.tertiary)),
+                        RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp),
+                    ),
                 actions = {
                     IconButton(onClick = { menuExpanded = true }) {
                         Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.more_options))
@@ -209,7 +226,7 @@ fun FotoKelioneApp(
         // ---------- APATINĖ JUOSTA (tik telefone) ----------
         bottomBar = {
             if (!useRail) {
-                NavigationBar {
+                NavigationBar(modifier = Modifier.shadow(12.dp)) {
                     Destination.entries.forEach { destination ->
                         val selected = currentRoute == destination.route
                         NavigationBarItem(

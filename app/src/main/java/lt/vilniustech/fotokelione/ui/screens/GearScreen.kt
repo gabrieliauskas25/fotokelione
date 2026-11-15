@@ -242,6 +242,7 @@ private fun GearCard(item: GearItem, onToggle: () -> Unit, onDelete: () -> Unit)
             // supakuotas daiktas – žalsvas fonas, nesupakuotas – pilkas
             containerColor = if (item.packed) colors.primaryContainer else colors.surfaceContainerLow,
         ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp), // nedidelis šešėlis
         modifier = Modifier.fillMaxWidth(),
     ) {
         Row(
