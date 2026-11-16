@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>5. Animuotas mesh (Xbot)</title>
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
+<script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+<style>html,body{margin:0;height:100%;overflow:hidden}#c{width:100%;height:100%}
+#ui{position:absolute;top:10px;left:10px}button{margin:2px;padding:6px 10px}</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="ui"></div>
+<script>
+/*
+  Mesh is Babylon.js bibliotekos: https://assets.babylonjs.com/meshes/Xbot.glb
+  (Available Meshes sarase). Jame jau yra skeletas ir animaciju grupes:
+  idle, walk, run, sad_pose, sneak_pose, headShake, agree.
+
+  Kodo paaiskinimas:
+  1. Sukuriamas engine, scena, kamera, sviesa ir zeme.
+  2. BABYLON.SceneLoader.ImportMeshAsync() ikelia .glb faila is interneto
+     (reikia babylonjs.loaders biblioteka, kad suprastu glTF/glb formata).
+  3. result.meshes - ikelti mesh'ai, result.skeletons - kaulai,
+     result.animationGroups - modelyje esancios animacijos.
+  4. Pradzioje visos animacijos sustabdomos ir paleidziama "idle".
+  5. Kiekvienai animacijai sukuriamas HTML mygtukas. Paspaudus mygtuka
+     sustabdoma esama animacija ir paleidziama pasirinkta (start(true) - kartoti).
+  6. Slankiklis keicia animacijos greiti (speedRatio).
+  7. Mesh'as dar ir sukasi aplink savo asi (onBeforeRenderObservable),
+     jei pazymetas "Sukti".
+*/
+const canvas = document.getElementById("c");
+const engine = new BABYLON.Engine(canvas, true);
+const scene = new BABYLON.Scene(engine);
+
+const camera = new BABYLON.ArcRotateCamera("cam", Math.PI/2, Math.PI/2.5, 4, new BABYLON.Vector3(0, 1, 0), scene);
+camera.attachControl(canvas, true);
+new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+BABYLON.MeshBuilder.CreateGround("ground", {width: 10, height: 10}, scene);
+
+BABYLON.SceneLoader.ImportMeshAsync("", "https://assets.babylonjs.com/meshes/", "Xbot.glb", scene).then(result => {
+  const root = result.meshes[0];          // pagrindinis (__root__) mesh'as
+  const groups = result.animationGroups;  // animacijos is failo
+
+  groups.forEach(g => g.stop());
+  let current = groups.find(g => g.name === "idle") || groups[0];
+  current.start(true);
+
+  const ui = document.getElementById("ui");
+
+  // Mygtukai kiekvienai animacijai
+  groups.forEach(g => {
+    const btn = document.createElement("button");
+    btn.textContent = g.name;
+    btn.onclick = () => {
+      current.stop();
+      current = g;
+      current.start(true, Number(speed.value));
+    };
+    ui.appendChild(btn);
+  });
+
+  // Greicio slankiklis
+  ui.appendChild(document.createElement("br"));
+  const label = document.createElement("span");
+  label.style.color = "white"; label.textContent = " Greitis: ";
+  ui.appendChild(label);
+  const speed = document.createElement("input");
+  speed.type = "range"; speed.min = 0.1; speed.max = 3; speed.step = 0.1; speed.value = 1;
+  speed.oninput = () => { current.speedRatio = Number(speed.value); };
+  ui.appendChild(speed);
+
+  // Sukimas aplink Y
+  const rot = document.createElement("input");
+  rot.type = "checkbox";
+  const rotLabel = document.createElement("span");
+  rotLabel.style.color = "white"; rotLabel.textContent = " Sukti";
+  ui.appendChild(rot); ui.appendChild(rotLabel);
+  scene.onBeforeRenderObservable.add(() => {
+    if (rot.checked) root.rotate(BABYLON.Vector3.Up(), 0.01);
+  });
+});
+
+engine.runRenderLoop(() => scene.render());
+window.addEventListener("resize", () => engine.resize());
+</script>
+</body>
+</html>
