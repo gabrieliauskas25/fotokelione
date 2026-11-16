@@ -56,7 +56,9 @@
   <arcgis-feature-table reference-element="#mapas"></arcgis-feature-table>
 
   <script type="module">
-    const [FeatureLayer, Graphic] = await $arcgis.import(["@arcgis/core/layers/FeatureLayer.js", "@arcgis/core/Graphic.js"]);
+    const [FeatureLayer, Graphic, Point, Viewpoint] = await $arcgis.import([
+      "@arcgis/core/layers/FeatureLayer.js", "@arcgis/core/Graphic.js", "@arcgis/core/geometry/Point.js", "@arcgis/core/Viewpoint.js"
+    ]);
     const zemelapis = document.querySelector("arcgis-map");
     const lentele = document.querySelector("arcgis-feature-table");
     await zemelapis.viewOnReady();
@@ -158,8 +160,10 @@
     lentele.hiddenFields = ["id"];   // id stulpelio nerodome
 
     // ---------- 5. Žymės (bookmarks) ----------
-    const zyme = (pavadinimas, ilguma, platuma) =>
-      ({ name: pavadinimas, viewpoint: { targetGeometry: { type: "point", longitude: ilguma, latitude: platuma }, scale: 150000 } });
+    function zyme(pavadinimas, ilguma, platuma) {
+      const vieta = new Viewpoint({ targetGeometry: new Point({ longitude: ilguma, latitude: platuma }), scale: 150000 });
+      return { name: pavadinimas, viewpoint: vieta };
+    }
     const zymes = document.querySelector("arcgis-bookmarks");
     await zymes.componentOnReady();
     zymes.bookmarks = [
