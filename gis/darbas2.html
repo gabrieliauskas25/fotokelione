@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8" />
+  <title>Lietuvos lankytinos vietos</title>
+  <script type="module" src="https://js.arcgis.com/5.1/"></script>
+  <style>
+    html, body { margin: 0; height: 100%; font-family: sans-serif; color: #222; }
+    body { display: grid; grid-template: "virsus virsus" 56px "meniu zemelapis" 1fr "meniu lentele" 230px / 260px 1fr; }
+    header { grid-area: virsus; background: #006a44; color: white; padding: 8px 16px; }
+    header h1 { margin: 0; font-size: 20px; }
+    header p { margin: 0; font-size: 13px; opacity: 0.85; }
+    aside { grid-area: meniu; padding: 12px 16px; background: #f4f6f5; border-right: 1px solid #ddd; overflow: auto; }
+    aside h3 { font-size: 14px; margin: 16px 0 6px; color: #006a44; }
+    aside label { display: block; margin: 4px 0; cursor: pointer; }
+    #info { margin-top: 16px; padding: 8px; background: white; border-radius: 6px; font-size: 13px; }
+    arcgis-map { grid-area: zemelapis; }
+    arcgis-feature-table { grid-area: lentele; border-top: 1px solid #ddd; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Lietuvos lankytinos vietos</h1>
+    <p>Pilys, piliakalniai, muziejai, gamtos ir sakralinės vietos</p>
+  </header>
+
+  <aside>
+    <h3>1–2. Atvaizdavimas</h3>
+    <label><input type="radio" name="budas" value="taskai" checked> Taškai pagal kategoriją</label>
+    <label><input type="radio" name="budas" value="klasteriai"> Klasteriai</label>
+    <label><input type="radio" name="budas" value="siluma"> Šilumos žemėlapis</label>
+
+    <h3>3. Kategorija</h3>
+    <label><input type="radio" name="kategorija" value="" checked> Visos</label>
+    <label><input type="radio" name="kategorija" value="Pilis"> Pilys</label>
+    <label><input type="radio" name="kategorija" value="Piliakalnis"> Piliakalniai</label>
+    <label><input type="radio" name="kategorija" value="Muziejus"> Muziejai</label>
+    <label><input type="radio" name="kategorija" value="Gamta"> Gamta</label>
+    <label><input type="radio" name="kategorija" value="Šventovė"> Šventovės</label>
+
+    <div id="info"></div>
+  </aside>
+
+  <!-- 5. Valdikliai -->
+  <arcgis-map id="mapas" basemap="topo-vector" center="23.9, 55.2" zoom="7">
+    <arcgis-zoom slot="top-left"></arcgis-zoom>
+    <arcgis-fullscreen slot="top-left"></arcgis-fullscreen>
+    <arcgis-scale-bar slot="bottom-left" unit="metric"></arcgis-scale-bar>
+    <arcgis-expand slot="top-right" group="desine" expand-tooltip="Žymės"><arcgis-bookmarks></arcgis-bookmarks></arcgis-expand>
+    <arcgis-expand slot="top-right" group="desine" expand-tooltip="Matuoti atstumą"><arcgis-distance-measurement-2d></arcgis-distance-measurement-2d></arcgis-expand>
+    <arcgis-expand slot="top-right" group="desine" expand-tooltip="Spausdinti"><arcgis-print></arcgis-print></arcgis-expand>
+    <arcgis-expand slot="top-right" group="desine" expand-tooltip="Sluoksniai"><arcgis-layer-list></arcgis-layer-list></arcgis-expand>
+  </arcgis-map>
+
+  <!-- 4. Atributų lentelė, susieta su žemėlapiu -->
+  <arcgis-feature-table reference-element="#mapas"></arcgis-feature-table>
+
+  <script type="module">
+    const [FeatureLayer, Graphic] = await $arcgis.import(["@arcgis/core/layers/FeatureLayer.js", "@arcgis/core/Graphic.js"]);
+    const zemelapis = document.querySelector("arcgis-map");
+    const lentele = document.querySelector("arcgis-feature-table");
+    await zemelapis.viewOnReady();
+
+    // ---------- Duomenys: pavadinimas, kategorija, vietovė, ilguma, platuma ----------
+    const vietos = [
+      ["Gedimino pilis", "Pilis", "Vilnius", 25.291, 54.687], ["Trakų salos pilis", "Pilis", "Trakai", 24.934, 54.653],
+      ["Kauno pilis", "Pilis", "Kaunas", 23.885, 54.899], ["Raudonės pilis", "Pilis", "Raudonė", 23.124, 55.091],
+      ["Panemunės pilis", "Pilis", "Vytėnai", 23.055, 55.082], ["Biržų pilis", "Pilis", "Biržai", 24.756, 56.201],
+      ["Raudondvario pilis", "Pilis", "Raudondvaris", 23.781, 54.939], ["Medininkų pilis", "Pilis", "Medininkai", 25.645, 54.539],
+      ["Klaipėdos pilis", "Pilis", "Klaipėda", 21.130, 55.708],
+      ["Kernavės piliakalniai", "Piliakalnis", "Kernavė", 24.851, 54.887], ["Merkinės piliakalnis", "Piliakalnis", "Merkinė", 24.185, 54.160],
+      ["Šeimyniškėlių piliakalnis", "Piliakalnis", "Anykščiai", 25.009, 55.464], ["Satrijos piliakalnis", "Piliakalnis", "Luokė", 22.530, 55.870],
+      ["Apuolės piliakalnis", "Piliakalnis", "Skuodas", 21.564, 56.227], ["Rambyno kalnas", "Piliakalnis", "Pagėgiai", 22.035, 55.081],
+      ["Rumšiškių muziejus", "Muziejus", "Rumšiškės", 24.200, 54.867], ["Grūto parkas", "Muziejus", "Druskininkai", 24.064, 54.054],
+      ["Šaltojo karo muziejus", "Muziejus", "Plokštinė", 21.852, 56.027], ["Lietuvos jūrų muziejus", "Muziejus", "Klaipėda", 21.100, 55.718],
+      ["Čiurlionio dailės muziejus", "Muziejus", "Kaunas", 23.914, 54.899], ["MO muziejus", "Muziejus", "Vilnius", 25.280, 54.679],
+      ["Palangos gintaro muziejus", "Muziejus", "Palanga", 21.071, 55.910], ["Velnių muziejus", "Muziejus", "Kaunas", 23.913, 54.898],
+      ["Parnidžio kopa", "Gamta", "Nida", 21.005, 55.290], ["Raganų kalnas", "Gamta", "Juodkrantė", 21.117, 55.547],
+      ["Lajų takas", "Gamta", "Anykščiai", 25.058, 55.507], ["Ladakalnis", "Gamta", "Ignalina", 26.030, 55.370],
+      ["Puntuko akmuo", "Gamta", "Anykščiai", 25.061, 55.484], ["Žuvinto rezervatas", "Gamta", "Alytus", 23.600, 54.450],
+      ["Zervynos", "Gamta", "Varėna", 24.450, 54.067], ["Platelių ežeras", "Gamta", "Plateliai", 21.840, 56.040],
+      ["Vilniaus arkikatedra", "Šventovė", "Vilnius", 25.288, 54.686], ["Aušros vartai", "Šventovė", "Vilnius", 25.290, 54.674],
+      ["Šv. Onos bažnyčia", "Šventovė", "Vilnius", 25.293, 54.683], ["Pažaislio vienuolynas", "Šventovė", "Kaunas", 24.024, 54.876],
+      ["Kryžių kalnas", "Šventovė", "Šiauliai", 23.417, 56.015], ["Šiluvos šventovė", "Šventovė", "Šiluva", 23.224, 55.533],
+      ["Žemaičių Kalvarija", "Šventovė", "Plungė", 21.920, 56.120], ["Tytuvėnų vienuolynas", "Šventovė", "Tytuvėnai", 23.195, 55.600]
+    ];
+
+    // ---------- Sluoksnis su lankytinomis vietomis ----------
+    const spalvos = { "Pilis": "#8e44ad", "Piliakalnis": "#b7950b", "Muziejus": "#2471a3", "Gamta": "#1e8449", "Šventovė": "#c0392b" };
+    const taskuRenderer = {
+      type: "unique-value",
+      field: "kategorija",
+      uniqueValueInfos: Object.keys(spalvos).map((k) => ({
+        value: k, symbol: { type: "simple-marker", size: 10, color: spalvos[k], outline: { color: "white" } }
+      }))
+    };
+    const sluoksnis = new FeatureLayer({
+      title: "Lankytinos vietos",
+      objectIdField: "id",
+      fields: [
+        { name: "id", type: "oid" },
+        { name: "pavadinimas", alias: "Pavadinimas", type: "string" },
+        { name: "kategorija", alias: "Kategorija", type: "string" },
+        { name: "vietove", alias: "Vietovė", type: "string" }
+      ],
+      source: vietos.map((v, i) => new Graphic({
+        geometry: { type: "point", longitude: v[3], latitude: v[4] },
+        attributes: { id: i + 1, pavadinimas: v[0], kategorija: v[1], vietove: v[2] }
+      })),
+      popupTemplate: { title: "{pavadinimas}", content: "{kategorija} · {vietove}" },
+      renderer: taskuRenderer
+    });
+    zemelapis.map.add(sluoksnis);
+
+    // ---------- 1. Klasterizavimas ----------
+    const klasteriai = {
+      type: "cluster",
+      clusterRadius: "80px",
+      popupTemplate: { title: "Klasteris", content: "Čia yra {cluster_count} lankytinos vietos." },
+      labelingInfo: [{
+        labelExpressionInfo: { expression: "$feature.cluster_count" },
+        labelPlacement: "center-center",
+        symbol: { type: "text", color: "white", font: { size: 12, weight: "bold" } }
+      }]
+    };
+
+    // ---------- 2. Šilumos žemėlapis ----------
+    const silumosRenderer = {
+      type: "heatmap",
+      radius: 40,
+      maxDensity: 0.005,   // kuo mažesnis skaičius, tuo „karštesnės“ vietos
+      colorStops: [
+        { ratio: 0, color: "rgba(255, 255, 255, 0)" },
+        { ratio: 0.2, color: "#4575b4" },
+        { ratio: 0.5, color: "#fee090" },
+        { ratio: 0.8, color: "#f46d43" },
+        { ratio: 1, color: "#a50026" }
+      ]
+    };
+
+    // Atvaizdavimo būdo keitimas
+    document.querySelectorAll("input[name=budas]").forEach((r) => r.onchange = () => {
+      sluoksnis.renderer = r.value === "siluma" ? silumosRenderer : taskuRenderer;
+      sluoksnis.featureReduction = r.value === "klasteriai" ? klasteriai : null;
+    });
+
+    // ---------- 3. Filtravimas pagal kategoriją ----------
+    async function filtruoti(kategorija) {
+      sluoksnis.definitionExpression = kategorija ? "kategorija = '" + kategorija + "'" : "";
+      const kiekis = await sluoksnis.queryFeatureCount();
+      document.getElementById("info").textContent = "Rodoma vietų: " + kiekis;
+    }
+    document.querySelectorAll("input[name=kategorija]").forEach((r) => r.onchange = () => filtruoti(r.value));
+    filtruoti("");
+
+    // ---------- 4. Atributų lentelė ----------
+    lentele.layer = sluoksnis;
+    lentele.hiddenFields = ["id"];   // id stulpelio nerodome
+
+    // ---------- 5. Žymės (bookmarks) ----------
+    const zyme = (pavadinimas, ilguma, platuma) =>
+      ({ name: pavadinimas, viewpoint: { targetGeometry: { type: "point", longitude: ilguma, latitude: platuma }, scale: 150000 } });
+    const zymes = document.querySelector("arcgis-bookmarks");
+    await zymes.componentOnReady();
+    zymes.bookmarks = [
+      zyme("Vilniaus senamiestis", 25.288, 54.682), zyme("Kaunas", 23.903, 54.898),
+      zyme("Pajūris", 21.12, 55.70), zyme("Anykščiai", 25.06, 55.50)
+    ];
+  </script>
+</body>
+</html>
