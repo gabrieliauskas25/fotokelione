@@ -21,6 +21,7 @@ app/src/main/java/lt/vilniustech/fotokelione/
 ├── MainActivity.kt          ← programos pradžia (onCreate)
 ├── Logic.kt                 ← skaičiavimai ir tikrinimas (be UI)
 ├── PlannerViewModel.kt      ← duomenys ir veiksmai (būsena)
+├── CardViewModel.kt         ← 2 etapas: kortelės duomenys + saugojimas telefone
 └── ui/
     ├── FotoKelioneApp.kt    ← Top App Bar, meniu „Autorius“, navigacija
     ├── components/
@@ -28,9 +29,14 @@ app/src/main/java/lt/vilniustech/fotokelione/
     ├── screens/
     │   ├── PlanScreen.kt    ← 1 ekranas „Planas“
     │   ├── GearScreen.kt    ← 2 ekranas „Įranga“
-    │   └── BudgetScreen.kt  ← 3 ekranas „Biudžetas“
+    │   ├── BudgetScreen.kt  ← 3 ekranas „Biudžetas“
+    │   └── CardScreen.kt    ← 4 ekranas „Kortelė“ (2 etapas)
     └── theme/
         └── Theme.kt         ← spalvos, šriftai, kampai
+app/src/main/res/
+├── values/strings.xml       ← VISI lietuviški tekstai
+├── values-en/strings.xml    ← VISI angliški tekstai
+└── drawable/                ← ikona, numatytoji nuotrauka, portfolio „kraunama“ / „klaida“ vaizdai
 app/src/test/java/lt/vilniustech/fotokelione/
 └── LogicTest.kt             ← unit testai
 ```
@@ -108,10 +114,50 @@ Vartotojas paspaudžia  →  Ekranas (PlanScreen) kviečia  →  viewModel.toggl
 | Logika atskirta | `Logic.kt` + `PlannerViewModel.kt` |
 | Unit testai | `LogicTest.kt` |
 
+## 2 ETAPAS – vizitinė kortelė
+
+Naujas skirtukas **„Kortelė“** (`CardScreen.kt`) + kalbos perjungimas visai programėlei.
+
+| Reikalavimas | Failas | Kur / funkcija |
+| --- | --- | --- |
+| Vizitinė kortelė: nuotrauka, el. paštas | `CardScreen.kt` | `ProfileHeader` (nuotrauka – `res/drawable/nuotrauka`, el. paštas – `AUTHOR_EMAIL` faile `FotoKelioneApp.kt`) |
+| Mygtukai CV / Portfolio | `CardScreen.kt` | `SectionButtons` → `CvSection`, `PortfolioSection` |
+| **Data Storage** – pridėti įrašai išlieka paleidus iš naujo | `CardViewModel.kt` | `addCv`, `addPortfolio` → `SharedPreferences` (JSON), `loadCv`, `loadPortfolio` |
+| **Kontakto forma + Intent** | `CardScreen.kt` → `Logic.kt` | `ContactSection`: `validateContact`, `Intent.ACTION_SENDTO` su `mailto:` |
+| **Lokalizavimas** LT / EN | `res/values/strings.xml`, `res/values-en/strings.xml` | kode visur `stringResource(R.string....)`; `enum` turi `@StringRes label` (`Logic.kt`) |
+| **Kalbos perjungiklis** | `FotoKelioneApp.kt` | meniu ⋮ → „Kalba“ → `switchLanguage` → `AppCompatDelegate.setApplicationLocales` |
+| **Skirtingi ekranai / pasukimas** | `CardScreen.kt`, `FotoKelioneApp.kt` | `BoxWithConstraints`: ≥ 600dp – dvi kolonos; `NavigationRail` planšetėje / gulsčiai; `verticalScroll` mažiems ekranams |
+| *(+1) Kamera* | `CardScreen.kt` → `CardViewModel.kt` | `rememberLauncherForActivityResult(TakePicturePreview())` → `savePhoto` (failas `nuotrauka.jpg`) |
+| *(+1) Nuotraukos iš interneto (Coil)* | `CardScreen.kt` | `PortfolioCard`: `AsyncImage` su `placeholder` (kraunama), `error` (nepavyko) ir mygtuku „Bandyti dar kartą“ (`key(attempt)`) |
+| **Publikavimas** | `docs/PUBLIKAVIMAS.md` | žingsniai Play Console; ikona `drawable/ic_launcher`, grafika `docs/play/` |
+
+### 2 etapo klausimai
+
+**Kaip išsaugomi duomenys?**
+`SharedPreferences` – paprasta „raktas → reikšmė“ saugykla telefone. Sąrašą paverčiame JSON tekstu (`JSONArray`) ir įrašome raktu `"cv"` arba `"portfolio"`. Paleidus programėlę `CardViewModel` juos nuskaito (`loadCv`). Nuotrauka saugoma failu `filesDir/nuotrauka.jpg`.
+
+**Kodėl `AndroidViewModel`, o ne `ViewModel`?**
+`SharedPreferences` ir failams reikia `Context` – `AndroidViewModel` jį turi (`application`).
+
+**Kaip veikia laiško siuntimas?**
+`Intent(Intent.ACTION_SENDTO)` su `mailto:` – Android atidaro el. pašto programėlę su užpildytu gavėju (`EXTRA_EMAIL`), tema (`EXTRA_SUBJECT`) ir tekstu (`EXTRA_TEXT`). Jei pašto programėlės nėra – `ActivityNotFoundException` → rodome `Toast`.
+
+**Kaip veikia dvi kalbos?**
+Visi tekstai yra `strings.xml`. Android pats pasirenka `values-en/` (anglų) arba `values/` (lietuvių, numatytoji). Kode tekstas gaunamas `stringResource(R.string.pavadinimas)`. Perjungiklis kviečia `AppCompatDelegate.setApplicationLocales(...)` – ekranas persikrauna su kita kalba, pasirinkimas išsaugomas (`AppLocalesMetadataHolderService` manifeste).
+
+**Kaip iškviečiama kamera?**
+`ActivityResultContracts.TakePicturePreview()` – atidaro telefono kameros programėlę ir grąžina `Bitmap`. Leidimo `CAMERA` nereikia, nes fotografuoja kita programėlė.
+
+**Kaip kraunamos nuotraukos iš interneto?**
+Biblioteka **Coil**: `AsyncImage(model = url, placeholder = ..., error = ...)`. Kol siunčiama – rodomas `vaizdas_kraunamas`, jei nepavyko – `vaizdas_klaida` ir mygtukas „Bandyti dar kartą“, kuris padidina `attempt`; `key(attempt)` priverčia `AsyncImage` siųsti iš naujo. Manifeste – leidimas `INTERNET`.
+
+**Kaip programėlė prisitaiko prie ekrano?**
+`BoxWithConstraints` duoda `maxWidth`. Jei ≥ 600dp (planšetė, gulsčias telefonas) – kortelė kairėje, turinys dešinėje; kitaip – viskas stulpelyje su slinkimu.
+
 ## Unit testai
 
 Paleisti: Android Studio → dešiniu pelės mygtuku ant `LogicTest.kt` → **Run 'LogicTest'**
-(arba terminale `./gradlew testDebugUnitTest`). Iš viso 26 testai.
+(arba terminale `./gradlew testDebugUnitTest`). Iš viso 30 testų.
 
 | Ką tikrina | Testai |
 | --- | --- |
@@ -121,6 +167,7 @@ Paleisti: Android Studio → dešiniu pelės mygtuku ant `LogicTest.kt` → **Ru
 | Kablelis | `commaIsAcceptedAsDecimalSeparator`, `formattingUsesComma` |
 | Neigiami ir ne skaičiai | `negativeAmountIsRejected`, `nonNumericAmountIsRejected` |
 | Biudžeto formulė | `budgetFormulaWithoutReserve`, `budgetFormulaWithReserveAddsTenPercent` |
+| El. paštas, URL, kontakto forma (2 etapas) | `validEmailIsAccepted`, `invalidEmailIsRejected`, `urlMustStartWithHttp`, `contactFormNeedsAllFields` |
 
 ## Tikėtini klausimai ir atsakymai
 
@@ -165,3 +212,9 @@ Fiksuotas reikšmių sąrašas, pvz. `Transport` turi tris variantus, kiekvienas
 | Planas | Nauja vieta | Įranga | Biudžetas |
 | --- | --- | --- | --- |
 | ![Planas](ekranai/1_planas.png) | ![Nauja vieta](ekranai/2_nauja_vieta.png) | ![Įranga](ekranai/3_iranga.png) | ![Biudžetas](ekranai/4_biudzetas.png) |
+
+| Kortelė (CV) | Kontakto forma | Kalbos meniu | Anglų kalba |
+| --- | --- | --- | --- |
+| ![CV](ekranai/5_kortele_cv.png) | ![Kontaktas](ekranai/6_kontaktas.png) | ![Meniu](ekranai/7_kalbos_meniu.png) | ![English](ekranai/8_english.png) |
+
+![Planšetė](ekranai/9_plansete_kortele.png)

@@ -1,3 +1,4 @@
 <resources>
-    <style name="Theme.FotoKelione" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- AppCompat tema reikalinga kalbos perjungimui (AppCompatDelegate.setApplicationLocales) -->
+    <style name="Theme.FotoKelione" parent="Theme.AppCompat.Light.NoActionBar" />
 </resources>

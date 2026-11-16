@@ -199,4 +199,39 @@ class LogicTest {
         assertEquals("12,50 €", formatEuro(12.5))
         assertEquals("1,6 kg", formatKg(1.6))
     }
+
+    // ---------- 2 etapas: vizitinė kortelė ----------
+
+    @Test
+    fun validEmailIsAccepted() {
+        assertTrue(isValidEmail("vardas@gmail.com"))
+        assertTrue(isValidEmail("  vardas.pavarde@stud.vilniustech.lt "))
+    }
+
+    @Test
+    fun invalidEmailIsRejected() {
+        assertFalse(isValidEmail(""))
+        assertFalse(isValidEmail("vardas"))
+        assertFalse(isValidEmail("vardas@"))
+        assertFalse(isValidEmail("vardas@gmail"))
+        assertFalse(isValidEmail("var das@gmail.com"))
+    }
+
+    @Test
+    fun urlMustStartWithHttp() {
+        assertTrue(isValidUrl("https://picsum.photos/id/1/600/400"))
+        assertTrue(isValidUrl("http://pavyzdys.lt/a.jpg"))
+        assertFalse(isValidUrl("picsum.photos/a.jpg"))
+        assertFalse(isValidUrl(""))
+    }
+
+    @Test
+    fun contactFormNeedsAllFields() {
+        assertTrue(validateContact("Jonas", "jonas@gmail.com", "Kiek kainuoja fotosesija?").isValid)
+        val errors = validateContact(" ", "blogas", "")
+        assertTrue(errors.name)
+        assertTrue(errors.email)
+        assertTrue(errors.question)
+        assertFalse(errors.isValid)
+    }
 }

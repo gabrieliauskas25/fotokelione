@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ENGLISH TEXTS. Same names (name) as in values/strings.xml. -->
+<resources>
+    <string name="app_name">FotoKelionė</string>
+
+    <string name="more_options">More options</string>
+    <string name="menu_author">Author</string>
+    <string name="menu_language">Kalba: lietuvių</string>
+    <string name="author_group">Group: %1$s</string>
+    <string name="close">Close</string>
+
+    <string name="nav_plan">Plan</string>
+    <string name="nav_gear">Gear</string>
+    <string name="nav_budget">Budget</string>
+    <string name="nav_card">Card</string>
+    <string name="badge_remaining">%1$s: %2$d left</string>
+
+    <string name="add">Add</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="name">Name</string>
+
+    <string name="plan_empty">No places in this list</string>
+    <string name="place_removed">“%1$s” removed</string>
+    <string name="undo">Undo</string>
+    <string name="new_place">New place</string>
+    <string name="trip_progress">Trip progress</string>
+    <string name="photographed_of">Photographed %1$d of %2$d</string>
+    <string name="progress_cd">Progress %1$d percent</string>
+    <string name="collapse">Collapse</string>
+    <string name="expand">Expand</string>
+    <string name="mark_done_cd">Mark “%1$s” as photographed</string>
+    <string name="outdoor">Outdoors</string>
+    <string name="indoor">Indoors</string>
+    <string name="outdoor_cd">Shot outdoors</string>
+    <string name="priority">Priority</string>
+    <string name="priority_value">Priority: %1$d</string>
+    <string name="priority_cd">Priority %1$d of 5</string>
+    <string name="category">Category</string>
+    <string name="time_of_day">Time of day</string>
+
+    <string name="cat_nature">Nature</string>
+    <string name="cat_city">City</string>
+    <string name="cat_architecture">Architecture</string>
+    <string name="cat_portrait">Portraits</string>
+    <string name="cat_night_sky">Night sky</string>
+
+    <string name="time_sunrise">Sunrise</string>
+    <string name="time_day">Day</string>
+    <string name="time_sunset">Sunset</string>
+    <string name="time_night">Night</string>
+
+    <string name="filter_all">All</string>
+    <string name="filter_pending">Pending</string>
+    <string name="filter_done">Done</string>
+
+    <string name="error_name_empty">Enter a name</string>
+    <string name="error_name_too_long">Name is too long (max %1$d characters)</string>
+
+    <string name="new_item">New item</string>
+    <string name="packed">Packed</string>
+    <string name="of_limit_items">of %1$s · %2$d/%3$d items</string>
+    <string name="luggage_limit">Luggage limit: %1$d kg</string>
+    <string name="luggage_limit_cd">Luggage limit in kilograms</string>
+    <string name="warning">Warning</string>
+    <string name="over_limit">Limit exceeded by %1$s!</string>
+    <string name="packed_cd">Packed: %1$s</string>
+    <string name="delete_item_cd">Delete “%1$s”</string>
+    <string name="weight_kg">Weight, kg</string>
+    <string name="weight_hint">e.g. 0.8</string>
+    <string name="weight_error">Enter a positive number</string>
+
+    <string name="section_trip">Trip</string>
+    <string name="nights">Number of nights</string>
+    <string name="nights_error">Enter a whole non-negative number</string>
+    <string name="flight_price">Flight price, €</string>
+    <string name="section_expenses">Expenses</string>
+    <string name="hotel_per_night">Hotel per night, €</string>
+    <string name="daily_expenses">Daily expenses, €</string>
+    <string name="section_transport">Transport</string>
+    <string name="add_reserve" formatted="false">Add 10 % reserve</string>
+    <string name="calculate">Calculate</string>
+    <string name="amount_error">Enter a non-negative number (e.g. 12.50)</string>
+    <string name="per_day_price">%1$s / day</string>
+    <string name="total">Total</string>
+    <string name="subtotal">Subtotal</string>
+    <string name="reserve" formatted="false">Reserve (10 %)</string>
+    <string name="average_per_day">Average per day</string>
+
+    <string name="transport_public">Public transport</string>
+    <string name="transport_car">Car rental</string>
+    <string name="transport_walk">On foot</string>
+
+    <string name="card_role">Photographer · multimedia student</string>
+    <string name="my_photo">My photo</string>
+    <string name="take_photo">Take a selfie</string>
+    <string name="no_camera_app">No camera app found</string>
+    <string name="no_email_app">No email app found</string>
+    <string name="show_cv">CV</string>
+    <string name="show_portfolio">Portfolio</string>
+    <string name="show_contact">Contact</string>
+    <string name="choose_section">Tap a button above to see my CV, my portfolio or to contact me.</string>
+
+    <string name="cv_title">Curriculum vitae (CV)</string>
+    <string name="new_cv_entry">New CV entry</string>
+    <string name="cv_entry">Entry</string>
+    <string name="cv_entry_hint">e.g. 2025 – photography course</string>
+    <string name="error_empty">This field cannot be empty</string>
+
+    <string name="portfolio_title">Portfolio</string>
+    <string name="new_portfolio_item">New work</string>
+    <string name="image_url">Image address (URL)</string>
+    <string name="error_url">The address must start with http:// or https://</string>
+    <string name="retry">Try again</string>
+    <string name="image_failed">Could not load the image</string>
+
+    <string name="contact_title">Contact me</string>
+    <string name="your_name">Your name</string>
+    <string name="your_email">Your email</string>
+    <string name="your_question">Question</string>
+    <string name="error_email">Enter a valid email address</string>
+    <string name="send">Send</string>
+    <string name="email_subject">Question from the FotoKelionė app</string>
+    <string name="email_body">Name: %1$s\nEmail: %2$s\n\n%3$s</string>
+
+    <string-array name="cv_items">
+        <item>2023 – present: VILNIUS TECH, Multimedia and Computer Design studies</item>
+        <item>Skills: photography, Adobe Lightroom, Photoshop, Kotlin, Jetpack Compose</item>
+        <item>Languages: Lithuanian (native), English (B2)</item>
+    </string-array>
+
+    <string-array name="portfolio_titles">
+        <item>River in the mountains</item>
+        <item>Mountain peaks</item>
+        <item>City at night</item>
+    </string-array>
+</resources>

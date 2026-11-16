@@ -1,8 +1,9 @@
-package lt.vilniustech.fotokelione
+package lt.vilniustech.fotokelione // paketas – „aplankas“, kuriam priklauso šis failas
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
+import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
@@ -14,14 +15,22 @@ import lt.vilniustech.fotokelione.ui.theme.FotoKelioneTheme
  *  - enableEdgeToEdge(): turinys piešiamas per visą ekraną (po būsenos juosta)
  *  - setContent { ... }: nuo čia prasideda Compose UI
  *  - calculateWindowSizeClass(): nustato, ar tai telefonas, ar planšetė
+ *
+ * AndroidManifest.xml faile ši klasė nurodyta kaip LAUNCHER –
+ * todėl ji atsidaro paspaudus programėlės ikoną.
  */
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() { // AppCompatActivity – Android ekranas (palaiko Compose ir kalbos perjungimą)
+
+    // calculateWindowSizeClass dar pažymėta kaip „eksperimentinė“, todėl reikia @OptIn
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            FotoKelioneTheme {
+    override fun onCreate(savedInstanceState: Bundle?) { // onCreate – kviečiama, kai ekranas sukuriamas
+        super.onCreate(savedInstanceState) // būtinai iškviečiame tėvinės klasės onCreate
+        // programėlė užima visą ekraną; laikrodis ir baterija – balti (ant spalvotos viršutinės juostos)
+        enableEdgeToEdge(statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT))
+        setContent { // viskas šių skliaustų viduje – Compose UI
+            FotoKelioneTheme { // mūsų tema (spalvos, šriftai) – žr. ui/theme/Theme.kt
+                // Paleidžiame visą programėlę ir perduodame ekrano dydžio klasę
+                // (Compact = telefonas, Medium/Expanded = planšetė ar gulsčias ekranas)
                 FotoKelioneApp(windowSizeClass = calculateWindowSizeClass(this))
             }
         }

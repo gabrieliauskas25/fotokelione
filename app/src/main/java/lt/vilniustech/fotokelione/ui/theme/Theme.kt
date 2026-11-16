@@ -40,11 +40,11 @@ private val LightColors = lightColorScheme(
     onTertiary = Color.White,
     tertiaryContainer = Color(0xFFBCF0B4),
     onTertiaryContainer = Color(0xFF002204),
-    background = Color(0xFFF5FAF9),
-    surface = Color(0xFFF5FAF9),
-    surfaceContainerLow = Color(0xFFEFF5F4),
-    surfaceContainer = Color(0xFFE9EFEE),
-    surfaceContainerHigh = Color(0xFFE3E9E8),
+    background = Color(0xFFE8F1F0),          // žalsvas fonas – baltos kortelės ant jo „iškyla“
+    surface = Color(0xFFE8F1F0),
+    surfaceContainerLow = Color(0xFFFFFFFF),  // kortelės – baltos
+    surfaceContainer = Color(0xFFFFFFFF),     // apatinė juosta – balta
+    surfaceContainerHigh = Color(0xFFDCE8E6), // atlikta vieta, tuščias sąrašas
 )
 
 private val DarkColors = darkColorScheme(
@@ -66,6 +66,7 @@ private val DarkColors = darkColorScheme(
 private val AppTypography = Typography().let { base ->
     base.copy(
         headlineMedium = base.headlineMedium.copy(fontWeight = FontWeight.Bold),
+        headlineSmall = base.headlineSmall.copy(fontWeight = FontWeight.Bold),
         titleLarge = base.titleLarge.copy(fontWeight = FontWeight.SemiBold),
         titleMedium = base.titleMedium.copy(fontWeight = FontWeight.SemiBold),
     )
