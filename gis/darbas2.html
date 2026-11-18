@@ -11,10 +11,10 @@
     /* Visas puslapis užima visą naršyklės langą, be paraščių */
     html, body { margin: 0; height: 100%; font-family: sans-serif; color: #222; }
 
-    /* DIZAINAS: CSS Grid padalija ekraną į 4 dalis:
+    /* DIZAINAS: CSS Grid padalija ekraną į 3 dalis:
        viršuje antraštė (56px), kairėje meniu (260px pločio),
-       centre žemėlapis (užima likusią vietą – 1fr), apačioje lentelė (230px aukščio) */
-    body { display: grid; grid-template: "virsus virsus" 56px "meniu zemelapis" 1fr "meniu lentele" 230px / 260px 1fr; }
+       dešinėje žemėlapis (užima likusią vietą – 1fr) */
+    body { display: grid; grid-template: "virsus virsus" 56px "meniu zemelapis" 1fr / 260px 1fr; }
 
     /* Antraštė – žalia (kaip Lietuvos vėliavos žalia spalva) */
     header { grid-area: virsus; background: #006a44; color: white; padding: 8px 16px; }
@@ -29,9 +29,8 @@
     /* Langelis, kuriame rodoma, kiek vietų matoma */
     #info { margin-top: 16px; padding: 8px; background: white; border-radius: 6px; font-size: 13px; }
 
-    /* Žemėlapis ir lentelė įstatomi į savo tinklelio vietas */
+    /* Žemėlapis įstatomas į savo tinklelio vietą */
     arcgis-map { grid-area: zemelapis; }
-    arcgis-feature-table { grid-area: lentele; border-top: 1px solid #ddd; }
   </style>
 </head>
 <body>
@@ -63,10 +62,10 @@
     <div id="info"></div>
   </aside>
 
-  <!-- ===== ŽEMĖLAPIS IR 5 FUNKCIONALUMAS: VALDIKLIAI (mygtukai) =====
+  <!-- ===== ŽEMĖLAPIS IR 4 FUNKCIONALUMAS: VALDIKLIAI (mygtukai) =====
        basemap – pagrindo žemėlapis (topografinis), center – centras (ilguma, platuma), zoom – priartinimas.
        Valdikliai įdedami žemėlapio viduje; slot nurodo, kuriame kampe jie rodomi. -->
-  <arcgis-map id="mapas" basemap="topo-vector" center="23.9, 55.2" zoom="7">
+  <arcgis-map basemap="topo-vector" center="23.9, 55.2" zoom="7">
     <!-- Priartinti / atitolinti -->
     <arcgis-zoom slot="top-left"></arcgis-zoom>
     <!-- Viso ekrano režimas -->
@@ -84,10 +83,6 @@
     <arcgis-expand slot="top-right" group="desine" expand-tooltip="Sluoksniai"><arcgis-layer-list></arcgis-layer-list></arcgis-expand>
   </arcgis-map>
 
-  <!-- ===== 4 FUNKCIONALUMAS: ATRIBUTŲ LENTELĖ =====
-       reference-element="#mapas" susieja lentelę su žemėlapiu (pažymėta eilutė paryškinama žemėlapyje) -->
-  <arcgis-feature-table reference-element="#mapas"></arcgis-feature-table>
-
   <script type="module">
     // Įkeliame reikalingas ArcGIS klases:
     // FeatureLayer – duomenų sluoksnis, Graphic – vienas objektas (taškas + atributai),
@@ -96,7 +91,6 @@
       "@arcgis/core/layers/FeatureLayer.js", "@arcgis/core/Graphic.js", "@arcgis/core/geometry/Point.js", "@arcgis/core/Viewpoint.js"
     ]);
     const zemelapis = document.querySelector("arcgis-map");             // žemėlapio elementas
-    const lentele = document.querySelector("arcgis-feature-table");     // lentelės elementas
     await zemelapis.viewOnReady();                                      // laukiame, kol žemėlapis užsikraus
 
     // ---------- DUOMENYS: pavadinimas, kategorija, vietovė, ilguma, platuma ----------
@@ -141,7 +135,7 @@
     const sluoksnis = new FeatureLayer({
       title: "Lankytinos vietos",                 // pavadinimas legendoje ir sluoksnių sąraše
       objectIdField: "id",                        // unikalus kiekvienos vietos numeris
-      fields: [                                   // stulpeliai (kaip duomenų bazės lentelėje); alias – rodomas lentelėje
+      fields: [                                   // stulpeliai (kaip duomenų bazės lentelėje)
         { name: "id", type: "oid" },
         { name: "pavadinimas", alias: "Pavadinimas", type: "string" },
         { name: "kategorija", alias: "Kategorija", type: "string" },
@@ -199,7 +193,7 @@
     async function filtruoti(kategorija) {
       // definitionExpression – SQL sąlyga (WHERE): rodomos tik ją atitinkančios vietos.
       // Pvz. kategorija = 'Muziejus'. Tuščia sąlyga – rodomos visos vietos.
-      // Filtras veikia kartu su taškais, klasteriais, šilumos žemėlapiu ir lentele.
+      // Filtras veikia kartu su taškais, klasteriais ir šilumos žemėlapiu.
       sluoksnis.definitionExpression = kategorija ? "kategorija = '" + kategorija + "'" : "";
       // Užklausa: kiek vietų atitinka filtrą
       const kiekis = await sluoksnis.queryFeatureCount();
@@ -209,11 +203,7 @@
     document.querySelectorAll("input[name=kategorija]").forEach((r) => r.onchange = () => filtruoti(r.value));
     filtruoti("");   // pradžioje rodome visas vietas
 
-    // ---------- 4 FUNKCIONALUMAS: ATRIBUTŲ LENTELĖ (pavyzdys „FeatureTable widget“) ----------
-    lentele.layer = sluoksnis;          // lentelė rodo mūsų sluoksnio duomenis
-    lentele.hiddenFields = ["id"];      // techninio id stulpelio nerodome
-
-    // ---------- 5 FUNKCIONALUMAS: VALDIKLIAI – ŽYMĖS (pavyzdys „Bookmarks component“) ----------
+    // ---------- 4 FUNKCIONALUMAS: VALDIKLIAI – ŽYMĖS (pavyzdys „Bookmarks component“) ----------
     // Sukuria vieną žymę: pavadinimas + vieta (taškas ir mastelis 1:150 000)
     function zyme(pavadinimas, ilguma, platuma) {
       const vieta = new Viewpoint({ targetGeometry: new Point({ longitude: ilguma, latitude: platuma }), scale: 150000 });
