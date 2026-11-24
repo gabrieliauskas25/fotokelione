@@ -105,7 +105,7 @@ const val AUTHOR_SURNAME = "Vaišvila"
 const val AUTHOR_GROUP = "MKDf-23/2"
 const val AUTHOR_UNIVERSITY = "VILNIUS TECH"
 // ČIA ĮRAŠYKITE SAVO EL. PAŠTĄ – jis rodomas kortelėje ir į jį siunčiama kontakto forma
-const val AUTHOR_EMAIL = "vardas.pavarde@stud.vilniustech.lt"
+const val AUTHOR_EMAIL = "gabrieliusmhm25@gmail.com"
 
 /**
  * Keturi programėlės ekranai.

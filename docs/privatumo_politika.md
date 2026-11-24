@@ -14,4 +14,4 @@
 
 **Internetas.** Internetas naudojamas tik portfolio nuotraukoms parodyti.
 
-**Kontaktai.** Klausimus siųskite el. paštu, nurodytu programėlės skiltyje „Kortelė“.
+**Kontaktai.** Klausimus siųskite el. paštu gabrieliusmhm25@gmail.com.

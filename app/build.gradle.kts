@@ -6,12 +6,12 @@ plugins {
 
 android {
     namespace = "lt.vilniustech.fotokelione"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "lt.vilniustech.fotokelione"
         minSdk = 24
-        targetSdk = 35
+        targetSdk = 36       // Android 16 – Google Play reikalauja naujausios versijos
         versionCode = 2       // didinamas kiekvieną kartą įkeliant naują versiją į Google Play
         versionName = "2.0"
     }
