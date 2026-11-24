@@ -1,12 +1,13 @@
 # FotoKelionė – publikavimas Google Play
 
-Programėlė publikavimui paruošta: turi ikoną, versiją (`versionCode = 2`, `versionName = "2.0"`), `targetSdk = 35`, dvi kalbas ir prisitaiko prie visų ekranų. Toliau – žingsniai, kuriuos reikia atlikti pačiam (reikia Google paskyros ir mokėjimo kortelės).
+Programėlė publikavimui paruošta: turi ikoną, versiją (`versionCode = 2`, `versionName = "2.0"`), `targetSdk = 36` (Android 16), dvi kalbas ir prisitaiko prie visų ekranų. Toliau – žingsniai, kuriuos reikia atlikti pačiam (reikia Google paskyros ir mokėjimo kortelės).
 
-## 0. Prieš pradedant
+## 0. Jau padaryta
 
-1. `ui/FotoKelioneApp.kt` → `AUTHOR_EMAIL` įrašykite **savo** el. paštą (į jį siunčiama kontakto forma).
-2. Savo nuotrauka: ištrinkite `app/src/main/res/drawable/nuotrauka.xml` ir įdėkite `nuotrauka.jpg` į tą patį aplanką.
-3. (Nebūtina) `CardViewModel.kt` → `DEFAULT_PORTFOLIO_URLS` pakeiskite nuorodomis į savo nuotraukas internete.
+- El. paštas: `ui/FotoKelioneApp.kt` → `AUTHOR_EMAIL`.
+- Nuotrauka: `app/src/main/res/drawable-nodpi/nuotrauka.jpg`.
+- Privatumo politika paskelbta: **https://gabrieliauskas25.github.io/fotokelione/privatumo_politika.html**
+- (Nebūtina) `CardViewModel.kt` → `DEFAULT_PORTFOLIO_URLS` galite pakeisti nuorodomis į savo nuotraukas internete.
 
 ## 1. Google Play Developer paskyra
 
@@ -33,7 +34,7 @@ Programėlė publikavimui paruošta: turi ikoną, versiją (`versionCode = 2`, `
 
 | Punktas | Ką atsakyti |
 | --- | --- |
-| Privacy policy | Nuoroda į privatumo politiką (žr. `docs/privatumo_politika.md` – įkelkite, pvz., į Google Sites ar GitHub Pages) |
+| Privacy policy | https://gabrieliauskas25.github.io/fotokelione/privatumo_politika.html |
 | App access | All functionality is available without special access |
 | Ads | No, my app does not contain ads |
 | Content rating | Užpildykite klausimyną (kategorija – Utility/Productivity, į viską „No“) |
